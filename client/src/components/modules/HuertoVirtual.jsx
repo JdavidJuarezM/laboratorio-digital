@@ -248,7 +248,7 @@ const Planta = ({ etapa }) => {
 // --- MEDIDOR DE RECURSOS ---
 // Muestra el nivel de agua o sol como una barra de progreso
 
-const Medidor = ({ nivel, tipo }) => {
+const Medidor = ({ nivel, tipo, respuestasCorrectas }) => {
   const colores = { agua: "bg-blue-500", sol: "bg-yellow-400" };
   return (
     <div className="w-full">
@@ -258,6 +258,11 @@ const Medidor = ({ nivel, tipo }) => {
           style={{ width: `${nivel}%` }}
         />
       </div>
+      {respuestasCorrectas !== undefined && (
+        <div className="text-center text-sm text-white mt-1">
+          Respuestas correctas: {respuestasCorrectas} / 3
+        </div>
+      )}
     </div>
   );
 };
@@ -456,6 +461,8 @@ const QuizModal = ({ pregunta, onRespuesta }) => {
 // --- Huerto Virtual ---
 // --- COMPONENTE PRINCIPAL ---
 function HuertoVirtual() {
+  const [preguntaMostradaPorMedidor, setPreguntaMostradaPorMedidor] =
+    useState(false);
   const [preguntaActual, setPreguntaActual] = useState(null); // Para guardar la pregunta que se mostrará
   const [respuestasCorrectas, setRespuestasCorrectas] = useState(0); // Contador de aciertos por etapa
   const [preguntasHechas, setPreguntasHechas] = useState([]); // Para no repetir preguntas en la misma etapa
@@ -556,6 +563,28 @@ function HuertoVirtual() {
   }, []);
 
   useEffect(() => {
+    if (
+      !preguntaActual && // no hay pregunta activa
+      respuestasCorrectas < 3 && // aún no se ha completado la etapa
+      !preguntaMostradaPorMedidor && // no se ha mostrado ya en este "ciclo"
+      (agua >= 100 || sol >= 100)
+    ) {
+      // Mostrar pregunta con retraso aleatorio entre 0.5 y 2 segundos
+      const delay = 500 + Math.random() * 1500;
+      const timeout = setTimeout(() => {
+        mostrarSiguientePregunta();
+        setPreguntaMostradaPorMedidor(true); // evita repetirla
+      }, delay);
+
+      return () => clearTimeout(timeout);
+    }
+
+    // Si los recursos bajan, se puede volver a mostrar pregunta si vuelve a 100
+    if (agua < 100 && sol < 100 && preguntaMostradaPorMedidor) {
+      setPreguntaMostradaPorMedidor(false);
+    }
+
+    // Verificar si se puede avanzar de etapa
     const enRango = (n) =>
       n > GAME_CONFIG.GROWTH_THRESHOLD.MIN &&
       n < GAME_CONFIG.GROWTH_THRESHOLD.MAX;
@@ -581,7 +610,14 @@ function HuertoVirtual() {
       playCrecimiento();
       saveState(nuevo);
     }
-  }, [agua, sol, etapa, saveState, playCrecimiento, respuestasCorrectas]);
+  }, [
+    agua,
+    sol,
+    preguntaActual,
+    respuestasCorrectas,
+    mostrarSiguientePregunta,
+    preguntaMostradaPorMedidor,
+  ]);
 
   const handleDragStart = ({ active }) => setActiveId(active.id);
 
@@ -730,10 +766,19 @@ function HuertoVirtual() {
             <div className="w-1/2 mt-4 space-y-2">
               <Medidor nivel={agua} tipo="agua" />
               <Medidor nivel={sol} tipo="sol" />
+              {/* Contador de respuestas */}
+              <div className="text-center text-white mt-2">
+                <div className="inline-flex items-center gap-2 bg-cyan-800/70 px-4 py-2 rounded-full shadow-md">
+                  <span className="text-lg font-bold">✅</span>
+                  <span className="text-sm font-semibold">
+                    Respuestas correctas: {respuestasCorrectas} / 3
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
         </main>
-        {/* 👇 AÑADE ESTE BLOQUE AL FINAL */}
+
         <button
           onClick={mostrarSiguientePregunta}
           className="bg-cyan-600 px-4 py-2 rounded mt-4"
