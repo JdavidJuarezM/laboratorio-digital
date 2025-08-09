@@ -10,9 +10,7 @@ const {
 // Ruta para el registro
 router.post("/registro", registrarMaestro);
 
-// 👇 --- INICIO DE NUEVA RUTA --- 👇
 // Ruta para el inicio de sesión
 router.post("/login", iniciarSesion);
-// 👆 --- FIN DE NUEVA RUTA --- 👆
 
 module.exports = router;

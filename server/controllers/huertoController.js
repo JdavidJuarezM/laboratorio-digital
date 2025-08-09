@@ -2,19 +2,19 @@
 const db = require("../config/db");
 
 const getHuertoState = async (req, res) => {
-  const maestroId = req.usuario.id; // <-- Usamos un nombre de variable más claro
+  const maestroId = req.usuario.id;
   const moduloNombre = "HuertoVirtual";
 
   try {
     const [rows] = await db.query(
-      "SELECT progreso_json FROM ProgresoModulos WHERE maestro_id = ? AND modulo_nombre = ?", // <-- CORRECCIÓN
+      "SELECT progreso_json FROM ProgresoModulos WHERE maestro_id = ? AND modulo_nombre = ?",
       [maestroId, moduloNombre]
     );
 
     if (rows.length === 0) {
       const estadoInicial = { etapa: 0, agua: 50, sol: 50 };
       await db.query(
-        "INSERT INTO ProgresoModulos (maestro_id, modulo_nombre, progreso_json) VALUES (?, ?, ?)", // <-- CORRECCIÓN
+        "INSERT INTO ProgresoModulos (maestro_id, modulo_nombre, progreso_json) VALUES (?, ?, ?)",
         [maestroId, moduloNombre, JSON.stringify(estadoInicial)]
       );
       return res.json(estadoInicial);

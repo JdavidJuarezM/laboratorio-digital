@@ -16,12 +16,12 @@ app.use("/api/huerto", huertoRoutes);
 const startServer = async () => {
   try {
     await db.query("SELECT 1");
-    console.log("✅ Conexión a la base de datos MySQL exitosa.");
+    console.log(" Conexión a la base de datos MySQL exitosa.");
     app.listen(PORT, () => {
-      console.log(`🚀 Servidor corriendo en el puerto ${PORT}`);
+      console.log(` Servidor corriendo en el puerto ${PORT}`);
     });
   } catch (error) {
-    console.error("❌ Error al conectar con la base de datos:", error);
+    console.error(" Error al conectar con la base de datos:", error);
     process.exit(1);
   }
 };

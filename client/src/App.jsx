@@ -6,7 +6,7 @@ import LoginForm from "./components/LoginForm";
 import RegistroForm from "./components/RegistroForm";
 import DashboardPage from "./pages/DashboardPage";
 import ProtectedRoute from "./components/ProtectedRoute";
-import HuertoVirtual from "./components/modules/HuertoVirtual"; // Importamos el nuevo módulo
+import HuertoVirtual from "./components/HuertoVirtual/HuertoVirtual";
 
 function App() {
   return (
