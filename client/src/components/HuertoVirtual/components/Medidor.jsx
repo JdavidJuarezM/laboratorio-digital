@@ -1,5 +1,7 @@
+// client/src/components/HuertoVirtual/components/Medidor.jsx
+
 import React, { memo } from "react";
-import PropTypes from "prop-types"; // Opcional: para validación de props
+import PropTypes from "prop-types";
 
 const Medidor = memo(({ nivel, tipo, respuestasCorrectas }) => {
   const colores = { agua: "bg-blue-500", sol: "bg-yellow-400" };
@@ -24,11 +26,13 @@ const Medidor = memo(({ nivel, tipo, respuestasCorrectas }) => {
   );
 });
 
-// Definición opcional de los tipos de las props para robustez
 Medidor.propTypes = {
   nivel: PropTypes.number.isRequired,
   tipo: PropTypes.oneOf(["agua", "sol"]).isRequired,
   respuestasCorrectas: PropTypes.number,
 };
+
+// Nombre del componente para facilitar la depuración en las React DevTools
+Medidor.displayName = "Medidor";
 
 export default Medidor;

@@ -2,15 +2,15 @@
 
 import { useReducer, useEffect, useCallback, useRef } from "react";
 import useSound from "use-sound";
-
-import { GAME_CONFIG } from "../../../constants/gameConfig";
-import { bancoDePreguntas } from "../../../constants/bancoDePreguntas";
 import {
   getEstadoHuerto,
   guardarEstadoHuerto,
 } from "../../../services/huertoService";
 
-// --- ESTADO INICIAL DEL JUEGO ---
+import { GAME_CONFIG } from "../../../constants/gameConfig";
+
+import { bancoDePreguntas } from "../../../constants/bancoDePreguntas";
+
 const initialState = {
   etapa: 0,
   agua: GAME_CONFIG.INITIAL_RESOURCE_LEVEL,
@@ -18,14 +18,14 @@ const initialState = {
   respuestasCorrectas: 0,
   preguntaActual: null,
   preguntasHechas: [],
-  pasoTutorial: 1, // Inicia el tutorial
+  pasoTutorial: 1,
   etapaCelebracion: null,
   isSaving: false,
   isLoading: true,
 };
 
-// --- REDUCER: El motor que actualiza el estado ---
 function gameReducer(state, action) {
+  // ... (tu reducer, que está perfecto, va aquí sin cambios)
   switch (action.type) {
     case "SET_INITIAL_STATE":
       return { ...state, ...action.payload, isLoading: false };
@@ -72,7 +72,7 @@ function gameReducer(state, action) {
     case "ADVANCE_STAGE":
       const nuevaEtapa = state.etapa + 1;
       return {
-        ...initialState, // Reinicia la mayoría del estado
+        ...initialState,
         etapa: nuevaEtapa,
         isLoading: false,
         pasoTutorial: 0,
@@ -91,7 +91,6 @@ function gameReducer(state, action) {
   }
 }
 
-// --- EL CUSTOM HOOK ---
 export const useHuertoState = () => {
   const [estado, dispatch] = useReducer(gameReducer, initialState);
   const [playCrecimiento] = useSound("/sonido-crecimiento.mp3", {
@@ -104,24 +103,33 @@ export const useHuertoState = () => {
 
   // --- EFECTOS SECUNDARIOS ---
 
-  // Cargar y Guardar Estado
+  // Cargar estado inicial
   useEffect(() => {
-    // Carga inicial
     getEstadoHuerto().then((data) => {
       if (data) dispatch({ type: "SET_INITIAL_STATE", payload: data });
       else dispatch({ type: "SET_INITIAL_STATE", payload: {} });
     });
   }, []);
 
-  const saveState = useCallback(async (currentState) => {
-    dispatch({ type: "SET_SAVING", payload: true });
-    const { etapa, agua, sol, respuestasCorrectas } = currentState;
-    await guardarEstadoHuerto({ etapa, agua, sol, respuestasCorrectas });
-    setTimeout(
-      () => dispatch({ type: "SET_SAVING", payload: false }),
-      GAME_CONFIG.SAVING_INDICATOR_DELAY_MS
-    );
-  }, []);
+  // Guardar estado cuando cambie (SOLUCIÓN AL STALE STATE)
+  useEffect(() => {
+    if (!estado.isLoading) {
+      // No guardar durante la carga inicial
+      const handler = setTimeout(() => {
+        dispatch({ type: "SET_SAVING", payload: true });
+        const { etapa, agua, sol, respuestasCorrectas } = estado;
+        guardarEstadoHuerto({ etapa, agua, sol, respuestasCorrectas }).finally(
+          () => {
+            setTimeout(
+              () => dispatch({ type: "SET_SAVING", payload: false }),
+              GAME_CONFIG.SAVING_INDICATOR_DELAY_MS
+            );
+          }
+        );
+      }, 1000); // Debounce: Espera 1 segundo de inactividad para guardar
+      return () => clearTimeout(handler);
+    }
+  }, [estado.etapa, estado.agua, estado.sol, estado.respuestasCorrectas]);
 
   // Game Tick
   useEffect(() => {
@@ -132,9 +140,10 @@ export const useHuertoState = () => {
     return () => clearInterval(intervalo);
   }, []);
 
-  // Lógica de avance de etapa
+  // Lógica de juego: avance de etapa y mostrar preguntas
   useEffect(() => {
-    const { etapa, agua, sol, respuestasCorrectas } = estado;
+    const { etapa, agua, sol, respuestasCorrectas, preguntaActual } = estado;
+    // Avance de etapa
     const enRango = (n) =>
       n > GAME_CONFIG.GROWTH_THRESHOLD.MIN &&
       n < GAME_CONFIG.GROWTH_THRESHOLD.MAX;
@@ -148,6 +157,10 @@ export const useHuertoState = () => {
       playCrecimiento();
       setTimeout(() => dispatch({ type: "HIDE_CELEBRATION" }), 4000);
     }
+    // Mostrar pregunta cuando un recurso llega al máximo
+    if (!preguntaActual && (agua >= 100 || sol >= 100)) {
+      dispatch({ type: "SHOW_QUESTION" });
+    }
   }, [
     estado.agua,
     estado.sol,
@@ -156,69 +169,49 @@ export const useHuertoState = () => {
     playCrecimiento,
   ]);
 
-  // --- ACCIONES (La API que usará nuestro componente de vista) ---
+  // --- ACCIONES (Ahora más simples, solo despachan) ---
   const acciones = {
-    soltarHerramienta: useCallback(
-      (resourceId) => {
-        dispatch({
-          type: "APPLY_RESOURCE",
-          payload: {
-            resourceId,
-            amount: GAME_CONFIG.RESOURCE_INCREASE_ON_DROP,
-          },
-        });
-        saveState(estado); // Guardar después de la acción
-      },
-      [estado, saveState]
-    ),
+    soltarHerramienta: useCallback((resourceId) => {
+      dispatch({
+        type: "APPLY_RESOURCE",
+        payload: { resourceId, amount: GAME_CONFIG.RESOURCE_INCREASE_ON_DROP },
+      });
+    }, []),
 
-    agitarHerramienta: useCallback(
-      (resourceId, delta, over) => {
-        if (over?.id !== "planta-area") return;
-
-        const datos = shakeDataRef.current[resourceId];
-        const now = Date.now();
-        const { TIME_MS, DISTANCE_PX, COUNT } = GAME_CONFIG.SHAKE_DETECTION;
-
-        const currentDir =
-          delta.x > 0 ? "derecha" : delta.x < 0 ? "izquierda" : null;
-        const cambiado =
-          currentDir && datos.lastDir && currentDir !== datos.lastDir;
-        const rapido = now - datos.lastTime < TIME_MS;
-        const suficiente = Math.abs(delta.x) > DISTANCE_PX;
-
-        if (cambiado && rapido && suficiente) {
-          datos.count++;
-          if (datos.count >= COUNT) {
-            dispatch({
-              type: "APPLY_RESOURCE",
-              payload: {
-                resourceId,
-                amount: GAME_CONFIG.RESOURCE_INCREASE_ON_SHAKE,
-              },
-            });
-            saveState(estado);
-            datos.count = 0;
-          }
+    agitarHerramienta: useCallback((resourceId, delta, over) => {
+      const datos = shakeDataRef.current[resourceId];
+      const now = Date.now();
+      const { TIME_MS, DISTANCE_PX, COUNT } = GAME_CONFIG.SHAKE_DETECTION;
+      const currentDir =
+        delta.x > 0 ? "derecha" : delta.x < 0 ? "izquierda" : null;
+      const cambiado =
+        currentDir && datos.lastDir && currentDir !== datos.lastDir;
+      const rapido = now - datos.lastTime < TIME_MS;
+      const suficiente = Math.abs(delta.x) > DISTANCE_PX;
+      if (cambiado && rapido && suficiente) {
+        datos.count++;
+        if (datos.count >= COUNT) {
+          dispatch({
+            type: "APPLY_RESOURCE",
+            payload: {
+              resourceId,
+              amount: GAME_CONFIG.RESOURCE_INCREASE_ON_SHAKE,
+            },
+          });
+          datos.count = 0;
         }
-        datos.lastTime = now;
-        datos.lastDir = currentDir;
-      },
-      [estado, saveState]
-    ),
+      }
+      datos.lastTime = now;
+      datos.lastDir = currentDir;
+    }, []),
 
-    handleRespuesta: useCallback(
-      (esCorrecta) => {
-        dispatch({ type: "ANSWER_QUESTION", payload: { esCorrecta } });
-        saveState(estado);
-      },
-      [estado, saveState]
-    ),
+    handleRespuesta: useCallback((esCorrecta) => {
+      dispatch({ type: "ANSWER_QUESTION", payload: { esCorrecta } });
+    }, []),
 
     reiniciarHuerto: useCallback(() => {
       dispatch({ type: "RESTART" });
-      saveState(initialState);
-    }, [saveState]),
+    }, []),
 
     setPasoTutorial: useCallback((paso) => {
       dispatch({ type: "SET_TUTORIAL_STEP", payload: paso });

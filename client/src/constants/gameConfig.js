@@ -1,5 +1,11 @@
+// client/src/constants/gameConfig.js
+
+// 1. Leemos la variable de entorno que definiremos en un archivo .env
+const API_URL = import.meta.env.VITE_API_URL;
+
 export const GAME_CONFIG = {
-  API_BASE_URL: "http://localhost:5000/api",
+  // 2. Usamos la variable en lugar de la URL fija
+  API_BASE_URL: API_URL || "/api", // Usa la variable, o /api como fallback
   INITIAL_RESOURCE_LEVEL: 50,
   RESOURCE_DECREASE_RATE: 5,
   GAME_TICK_INTERVAL_MS: 3000,

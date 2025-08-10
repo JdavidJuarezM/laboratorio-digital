@@ -41,6 +41,12 @@ function HuertoVirtual() {
   const [playDropSol] = useSound("/sonido-sol1.mp3", { volume: 0.1 });
 
   const handleDragStart = ({ active }) => setActiveId(active.id);
+
+  // 👇 La lógica de agitar ahora se pasa al hook
+  const handleDragMove = ({ active, delta }) => {
+    agitarHerramienta(active.id, delta);
+  };
+
   const handleDragEnd = ({ active, over }) => {
     if (over?.id === "planta-area") {
       soltarHerramienta(active.id);
@@ -51,18 +57,23 @@ function HuertoVirtual() {
     setActiveId(null);
   };
 
-  const { setNodeRef } = useDroppable({ id: "planta-area" });
+  const { setNodeRef, isOver } = useDroppable({ id: "planta-area" });
 
   if (isLoading) {
     return (
-      <div className="flex h-full w-full items-center justify-center bg-gray-800 text-white">
+      <div className="flex h-full w-full items-center justify-center bg-gray-800 text-white text-xl">
         Cargando tu huerto...
       </div>
     );
   }
 
   return (
-    <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+    // 👇 Activamos onDragMove
+    <DndContext
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+      onDragMove={handleDragMove}
+    >
       <div
         className="flex h-full w-full text-white p-4 gap-4"
         style={{
@@ -73,7 +84,8 @@ function HuertoVirtual() {
       >
         <AnimatePresence>
           {etapaCelebracion !== null && (
-            <Celebration etapa={etapaCelebracion} />
+            // 👇 Pasamos el nombre de la etapa para un mensaje más claro
+            <Celebration etapaNombre={nombresEtapas[etapaCelebracion]} />
           )}
         </AnimatePresence>
         {isSaving && <IndicadorGuardando />}
@@ -111,7 +123,9 @@ function HuertoVirtual() {
           </div>
           <div
             ref={setNodeRef}
-            className="bg-sky-800/30 flex-grow rounded-xl flex flex-col items-center justify-center p-4"
+            className={`bg-sky-800/30 flex-grow rounded-xl flex flex-col items-center justify-center p-4 transition-colors ${
+              isOver ? "bg-green-500/20" : ""
+            }`}
           >
             <Planta etapa={etapa} />
             <div className="w-1/2 mt-4 space-y-2">
