@@ -1,5 +1,6 @@
 // server/index.js
 
+// --- 1. Importaciones ---
 const express = require("express");
 const cors = require("cors");
 const dotenv = require("dotenv");
@@ -7,40 +8,39 @@ const conectarDB = require("./config/db");
 const maestrosRoutes = require("./routes/maestrosRoutes");
 const huertoRoutes = require("./routes/huertoRoutes");
 
+// --- 2. Configuración Inicial ---
 dotenv.config();
 conectarDB();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// --- INICIO DE LA CORRECCIÓN DE CORS ---
-
-// Leemos la URL de nuestro frontend desde la variable de entorno
-const frontendURL = process.env.FRONTEND_URL;
+// --- 3. Configuración de CORS para Diagnóstico ---
+// Usamos origin: "*" para permitir temporalmente peticiones desde CUALQUIER lugar.
+// Esto nos ayudará a determinar si el problema es la variable de entorno FRONTEND_URL.
+console.log(
+  "ADVERTENCIA: El servidor está corriendo en modo de diagnóstico con CORS abierto (*)."
+);
 
 const corsOptions = {
-  origin: frontendURL,
+  origin: "*", // Permitir CUALQUIER origen (solo para depurar)
   optionsSuccessStatus: 200,
 };
 
-// 1. MANEJO EXPLÍCITO DE PREFLIGHT REQUESTS
-// Esto intercepta todas las peticiones OPTIONS y responde inmediatamente
-// con los headers de CORS correctos, antes de que lleguen a nuestras rutas.
+// Manejo explícito de las peticiones "preflight" (OPTIONS)
 app.options("*", cors(corsOptions));
 
-// 2. MANEJO GENERAL DE CORS
-// Esto se aplica al resto de las peticiones (GET, POST, etc.)
+// Manejo general de CORS para el resto de las peticiones (GET, POST, etc.)
 app.use(cors(corsOptions));
 
-// --- FIN DE LA CORRECCIÓN DE CORS ---
-
+// --- 4. Otros Middlewares ---
 app.use(express.json());
 
-// Rutas de la API
+// --- 5. Rutas de la API ---
 app.use("/api/maestros", maestrosRoutes);
 app.use("/api/huerto", huertoRoutes);
 
-// Lógica para correr el servidor (solo en desarrollo)
+// --- 6. Lógica para correr el servidor (solo en desarrollo local) ---
 if (process.env.NODE_ENV !== "production") {
   app.listen(PORT, () => {
     console.log(
@@ -49,5 +49,5 @@ if (process.env.NODE_ENV !== "production") {
   });
 }
 
-// Exportación para Vercel
+// --- 7. Exportación para Vercel ---
 module.exports = app;
