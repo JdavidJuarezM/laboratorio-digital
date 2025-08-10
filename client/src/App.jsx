@@ -1,12 +1,17 @@
 // client/src/App.jsx
+
 import "./styles/tailwind.css";
 import React from "react";
 import { Routes, Route } from "react-router-dom";
-import LoginForm from "./components/LoginForm";
-import RegistroForm from "./components/RegistroForm";
+
+// --- INICIO DE CORRECCIÓN ---
+// Rutas ajustadas para que coincidan con tu estructura de carpetas.
+import LoginForm from "./components/modules/LoginForm";
+import RegistroForm from "./components/modules/RegistroForm";
 import DashboardPage from "./pages/DashboardPage";
-import ProtectedRoute from "./components/ProtectedRoute";
+import ProtectedRoute from "./components/ProtectedRoute"; // Esta ruta ya era correcta
 import HuertoVirtual from "./components/HuertoVirtual/HuertoVirtual";
+// --- FIN DE CORRECCIÓN ---
 
 function App() {
   return (
@@ -15,7 +20,8 @@ function App() {
         {/* Rutas públicas */}
         <Route path="/" element={<LoginForm />} />
         <Route path="/registro" element={<RegistroForm />} />
-        {/* --- INICIO DE LA MODIFICACIÓN --- */}
+
+        {/* Ruta anidada y protegida para el Dashboard */}
         <Route
           path="/dashboard"
           element={
@@ -24,9 +30,9 @@ function App() {
             </ProtectedRoute>
           }
         >
+          {/* Esta ruta se renderizará donde pongamos el <Outlet /> en DashboardPage */}
           <Route path="huerto" element={<HuertoVirtual />} />
         </Route>
-        {/* --- FIN DE LA MODIFICACIÓN --- */}
       </Routes>
     </div>
   );

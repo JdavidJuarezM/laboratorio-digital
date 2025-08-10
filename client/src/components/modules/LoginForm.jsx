@@ -1,11 +1,15 @@
 // client/src/components/LoginForm.jsx
+
 import React, { useState } from "react";
-import axios from "axios";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext"; // 2. Importamos el hook de autenticación
+import { login as loginService } from "../../services/authService";
 
 function LoginForm() {
-  const navigate = useNavigate();
+  const { login } = useAuth(); // 👈 3. Obtenemos la acción 'login' de nuestro contexto
   const [formData, setFormData] = useState({ email: "", password: "" });
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleInputChange = (event) => {
     const { name, value } = event.target;
@@ -14,30 +18,42 @@ function LoginForm() {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+    setError("");
+    setIsLoading(true);
+
     try {
-      const response = await axios.post(
-        "http://localhost:5000/api/maestros/login",
-        formData
-      );
-      localStorage.setItem("token", response.data.token);
-      navigate("/dashboard");
-    } catch (error) {
-      alert("Credenciales incorrectas. Inténtalo de nuevo.");
+      // 4. Llamamos a nuestro servicio centralizado, no a axios directamente.
+      const response = await loginService(formData.email, formData.password);
+
+      // 5. Llamamos a la acción 'login' del contexto.
+      // ¡Esta única línea se encarga de guardar el token y redirigir al usuario!
+      login(response.token);
+    } catch (err) {
+      setError("Credenciales incorrectas. Inténtalo de nuevo.");
+      console.error("Error en el inicio de sesión:", err);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    // Contenedor principal: ocupa toda la pantalla, fondo oscuro, y centra su contenido
     <div className="bg-gray-900 min-h-screen flex items-center justify-center p-4">
-      {/* Tarjeta del formulario */}
       <div className="bg-gray-800 p-8 rounded-2xl shadow-lg w-full max-w-sm">
-        {/* Avatar */}
         <div className="w-20 h-20 mx-auto -mt-20 mb-6 bg-gray-700 rounded-full flex items-center justify-center border-4 border-gray-800">
           <i className="fa-solid fa-user text-4xl text-cyan-400"></i>
         </div>
 
+        <h2 className="text-center text-3xl font-bold text-white mb-6">
+          Iniciar Sesión
+        </h2>
+
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Grupo de Email */}
+          {error && (
+            <p className="text-red-400 text-center bg-red-900/50 p-3 rounded-lg">
+              {error}
+            </p>
+          )}
+
           <div className="relative">
             <i className="fa-solid fa-envelope absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
             <input
@@ -51,7 +67,6 @@ function LoginForm() {
             />
           </div>
 
-          {/* Grupo de Contraseña */}
           <div className="relative">
             <i className="fa-solid fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
             <input
@@ -65,16 +80,15 @@ function LoginForm() {
             />
           </div>
 
-          {/* Botón de Login */}
           <button
             type="submit"
-            className="w-full bg-cyan-500 text-gray-900 font-bold py-3 rounded-lg hover:bg-cyan-600 transition-colors"
+            disabled={isLoading}
+            className="w-full bg-cyan-500 text-gray-900 font-bold py-3 rounded-lg hover:bg-cyan-600 transition-colors disabled:opacity-50 disabled:cursor-wait"
           >
-            LOGIN
+            {isLoading ? "Entrando..." : "LOGIN"}
           </button>
         </form>
 
-        {/* Enlace de Registro */}
         <p className="text-center text-gray-400 mt-6">
           ¿No tienes una cuenta?{" "}
           <Link

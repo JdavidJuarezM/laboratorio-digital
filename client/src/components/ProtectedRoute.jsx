@@ -1,18 +1,19 @@
 // client/src/components/ProtectedRoute.jsx
+
 import React from "react";
 import { Navigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext"; // 👈 Usamos nuestro hook
 
 function ProtectedRoute({ children }) {
-  const token = localStorage.getItem("token");
+  const { isAuthenticated } = useAuth(); // Obtenemos el estado de autenticación del contexto
 
-  if (!token) {
-    // Si no hay token, redirige al usuario a la página de login
+  // Si no está autenticado, redirige al login
+  if (!isAuthenticated) {
     return <Navigate to="/" replace />;
   }
 
-  // Si hay un token, muestra el contenido de la página protegida
+  // Si está autenticado, muestra la página
   return children;
 }
 
-// La línea que faltaba para resolver el error:
 export default ProtectedRoute;

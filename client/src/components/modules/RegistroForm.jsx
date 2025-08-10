@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import apiClient from "../api/axiosConfig"; // 1. Importar la instancia de Axios
+import apiClient from "../../services/apiClient"; // 1. Importar la instancia de Axios
 import InputWithIcon from "./InputWithIcon"; // 2. Importar el nuevo componente de input
 
 function RegistroForm() {

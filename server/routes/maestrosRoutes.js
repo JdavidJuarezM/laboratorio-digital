@@ -1,16 +1,18 @@
-// server/routes/maestrosRoutes.js
 const express = require("express");
 const router = express.Router();
-// Importamos las dos funciones del controlador
 const {
   registrarMaestro,
   iniciarSesion,
+  getMaestroPerfil,
 } = require("../controllers/maestrosController");
+const { protegerRuta } = require("../middleware/authMiddleware");
 
-// Ruta para el registro
+// --- Rutas Públicas ---
 router.post("/registro", registrarMaestro);
-
-// Ruta para el inicio de sesión
 router.post("/login", iniciarSesion);
+
+// --- Ruta Protegida ---
+// El middleware 'protegerRuta' se ejecuta ANTES que el controlador 'getMaestroPerfil'.
+router.get("/perfil", protegerRuta, getMaestroPerfil);
 
 module.exports = router;

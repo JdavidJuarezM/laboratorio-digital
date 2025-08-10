@@ -1,6 +1,6 @@
 import React from "react";
 import { useDraggable } from "@dnd-kit/core";
-import { TOOL_TYPES } from "../constants/gameConfig"; // Correcto
+import { TOOL_TYPES } from "../../../constants/gameConfig"; // Correcto
 
 const Herramienta = ({
   id,

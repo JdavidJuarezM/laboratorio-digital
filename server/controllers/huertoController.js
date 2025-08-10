@@ -1,26 +1,27 @@
 // server/controllers/huertoController.js
-const db = require("../config/db");
+
+const Progreso = require("../models/ProgresoModel");
 
 const getHuertoState = async (req, res) => {
   const maestroId = req.usuario.id;
   const moduloNombre = "HuertoVirtual";
 
   try {
-    const [rows] = await db.query(
-      "SELECT progreso_json FROM ProgresoModulos WHERE maestro_id = ? AND modulo_nombre = ?",
-      [maestroId, moduloNombre]
-    );
+    let progreso = await Progreso.findOne({
+      maestro_id: maestroId,
+      modulo_nombre: moduloNombre,
+    });
 
-    if (rows.length === 0) {
-      const estadoInicial = { etapa: 0, agua: 50, sol: 50 };
-      await db.query(
-        "INSERT INTO ProgresoModulos (maestro_id, modulo_nombre, progreso_json) VALUES (?, ?, ?)",
-        [maestroId, moduloNombre, JSON.stringify(estadoInicial)]
-      );
-      return res.json(estadoInicial);
+    if (!progreso) {
+      console.log("No se encontró progreso, creando uno nuevo para el huerto.");
+      progreso = await Progreso.create({
+        maestro_id: maestroId,
+        modulo_nombre: moduloNombre,
+        progreso_json: { etapa: 0, agua: 50, sol: 50, respuestasCorrectas: 0 },
+      });
     }
 
-    res.json(JSON.parse(rows[0].progreso_json));
+    res.json(progreso.progreso_json);
   } catch (error) {
     console.error("Error al obtener estado del huerto:", error);
     res.status(500).json({ message: "Error en el servidor" });
@@ -28,14 +29,15 @@ const getHuertoState = async (req, res) => {
 };
 
 const updateHuertoState = async (req, res) => {
-  const maestroId = req.usuario.id; // <-- Usamos un nombre de variable más claro
+  const maestroId = req.usuario.id;
   const moduloNombre = "HuertoVirtual";
   const nuevoEstado = req.body;
 
   try {
-    await db.query(
-      "UPDATE ProgresoModulos SET progreso_json = ? WHERE maestro_id = ? AND modulo_nombre = ?", // <-- CORRECCIÓN
-      [JSON.stringify(nuevoEstado), maestroId, moduloNombre]
+    await Progreso.findOneAndUpdate(
+      { maestro_id: maestroId, modulo_nombre: moduloNombre },
+      { $set: { progreso_json: nuevoEstado } },
+      { new: true, upsert: true }
     );
     res.json({ message: "Progreso guardado exitosamente" });
   } catch (error) {
