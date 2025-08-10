@@ -1,34 +1,41 @@
 // server/index.js
 
+// --- 1. Importaciones (usando el formato require) ---
 const express = require("express");
 const cors = require("cors");
-const dotenv = require("dotenv"); // Para manejar variables de entorno locales
-
-// --- 1. Importamos la nueva conexión a MongoDB ---
+const dotenv = require("dotenv");
 const conectarDB = require("./config/db");
-
-// --- 2. Importamos las mismas rutas ---
 const maestrosRoutes = require("./routes/maestrosRoutes");
 const huertoRoutes = require("./routes/huertoRoutes");
 
-// --- 3. Configuración inicial ---
+// --- 2. Configuración Inicial ---
 dotenv.config(); // Carga las variables del archivo .env
-conectarDB(); // Ejecutamos la función para conectar a MongoDB
+conectarDB(); // Ejecuta la función para conectar a MongoDB
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// --- 4. Middlewares (igual que antes) ---
-app.use(cors());
-app.use(express.json());
+// --- 3. Configuración de CORS ---
+// Leemos la URL de nuestro frontend desde una nueva variable de entorno
+const frontendURL = process.env.FRONTEND_URL;
 
-// --- 5. Rutas (igual que antes) ---
+const corsOptions = {
+  origin: frontendURL,
+  optionsSuccessStatus: 200,
+};
+
+// Usamos las opciones de CORS en nuestro middleware
+app.use(cors(corsOptions));
+
+// --- 4. Otros Middlewares ---
+app.use(express.json()); // Para que el servidor entienda peticiones con cuerpo JSON
+
+// --- 5. Rutas de la API ---
 app.use("/api/maestros", maestrosRoutes);
 app.use("/api/huerto", huertoRoutes);
 
-// --- 6. Lógica para correr el servidor ---
-
-// Esta parte solo se ejecuta cuando estás en tu computadora (desarrollo local)
+// --- 6. Lógica para correr el servidor (solo en desarrollo) ---
+// Esta parte no se ejecutará en Vercel, lo cual es correcto.
 if (process.env.NODE_ENV !== "production") {
   app.listen(PORT, () => {
     console.log(
@@ -37,6 +44,6 @@ if (process.env.NODE_ENV !== "production") {
   });
 }
 
-// --- 7. ¡La exportación para Vercel! ---
-// Esta es la línea que Vercel usará para tomar tu app y desplegarla.
+// --- 7. Exportación para Vercel ---
+// Esta es la línea que permite a Vercel desplegar tu servidor.
 module.exports = app;
