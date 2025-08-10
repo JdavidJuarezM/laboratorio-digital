@@ -2,14 +2,16 @@
 
 import axios from "axios";
 
-// Aquí podrías tener la URL base importada desde un archivo de configuración
-const API_URL = "http://localhost:5000/api";
+// 1. Lee la variable de entorno de Vite.
+// Vite automáticamente reemplazará esto con el valor correcto durante la compilación.
+const API_URL = import.meta.env.VITE_API_URL;
 
 const apiClient = axios.create({
+  // 2. Usa la variable para la URL base.
   baseURL: API_URL,
 });
 
-// Interceptor para añadir el token de autorización a cada petición
+// 3. El interceptor que ya tienes está perfecto. Se encarga de añadir el token.
 apiClient.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("token");
