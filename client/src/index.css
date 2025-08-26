@@ -1,3 +1,52 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+body {
+  font-family: "Fredoka", sans-serif;
+  background: linear-gradient(135deg, #a855f7, #6366f1, #3b82f6, #60a5fa);
+  background-size: 400% 400%;
+  animation: gradientBG 15s ease infinite;
+}
+
+@keyframes gradientBG {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.menu-item.active {
+  background-color: #4338ca;
+  color: white;
+  transform: scale(1.05);
+  animation: glow 2s infinite alternate;
+}
+
+@keyframes glow {
+  from {
+    box-shadow: 0 0 10px -5px #a78bfa, 0 0 20px -10px #a78bfa;
+  }
+  to {
+    box-shadow: 0 0 20px 0px #a78bfa, 0 0 30px -5px #a78bfa;
+  }
+}
+
+.mascot-container {
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-15px);
+  }
+}

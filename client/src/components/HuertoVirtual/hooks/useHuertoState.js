@@ -1,5 +1,3 @@
-// client/src/components/HuertoVirtual/hooks/useHuertoState.js
-
 import { useReducer, useEffect, useCallback, useRef } from "react";
 import useSound from "use-sound";
 import {
@@ -8,7 +6,6 @@ import {
 } from "../../../services/huertoService";
 
 import { GAME_CONFIG } from "../../../constants/gameConfig";
-
 import { bancoDePreguntas } from "../../../constants/bancoDePreguntas";
 
 const initialState = {
@@ -25,7 +22,6 @@ const initialState = {
 };
 
 function gameReducer(state, action) {
-  // ... (tu reducer, que está perfecto, va aquí sin cambios)
   switch (action.type) {
     case "SET_INITIAL_STATE":
       return { ...state, ...action.payload, isLoading: false };
@@ -91,7 +87,9 @@ function gameReducer(state, action) {
   }
 }
 
-export const useHuertoState = () => {
+// --- MODIFICACIÓN 1 ---
+// El hook ahora acepta 'juegoIniciado' para controlar su ejecución.
+export const useHuertoState = (juegoIniciado) => {
   const [estado, dispatch] = useReducer(gameReducer, initialState);
   const [playCrecimiento] = useSound("/sonido-crecimiento.mp3", {
     volume: 0.5,
@@ -103,18 +101,20 @@ export const useHuertoState = () => {
 
   // --- EFECTOS SECUNDARIOS ---
 
-  // Cargar estado inicial
+  // --- MODIFICACIÓN 2 ---
+  // Cargar estado inicial solo cuando el juego ha comenzado.
   useEffect(() => {
-    getEstadoHuerto().then((data) => {
-      if (data) dispatch({ type: "SET_INITIAL_STATE", payload: data });
-      else dispatch({ type: "SET_INITIAL_STATE", payload: {} });
-    });
-  }, []);
+    if (juegoIniciado) {
+      getEstadoHuerto().then((data) => {
+        if (data) dispatch({ type: "SET_INITIAL_STATE", payload: data });
+        else dispatch({ type: "SET_INITIAL_STATE", payload: {} });
+      });
+    }
+  }, [juegoIniciado]);
 
-  // Guardar estado cuando cambie (SOLUCIÓN AL STALE STATE)
+  // Guardar estado cuando cambie, solo si el juego está iniciado.
   useEffect(() => {
-    if (!estado.isLoading) {
-      // No guardar durante la carga inicial
+    if (!estado.isLoading && juegoIniciado) {
       const handler = setTimeout(() => {
         dispatch({ type: "SET_SAVING", payload: true });
         const { etapa, agua, sol, respuestasCorrectas } = estado;
@@ -126,50 +126,60 @@ export const useHuertoState = () => {
             );
           }
         );
-      }, 1000); // Debounce: Espera 1 segundo de inactividad para guardar
+      }, 1000);
       return () => clearTimeout(handler);
     }
-  }, [estado.etapa, estado.agua, estado.sol, estado.respuestasCorrectas]);
+  }, [
+    estado.etapa,
+    estado.agua,
+    estado.sol,
+    estado.respuestasCorrectas,
+    juegoIniciado,
+  ]);
 
-  // Game Tick
+  // Game Tick, solo si el juego está iniciado.
   useEffect(() => {
-    const intervalo = setInterval(
-      () => dispatch({ type: "GAME_TICK" }),
-      GAME_CONFIG.GAME_TICK_INTERVAL_MS
-    );
-    return () => clearInterval(intervalo);
-  }, []);
-
-  // Lógica de juego: avance de etapa y mostrar preguntas
-  useEffect(() => {
-    const { etapa, agua, sol, respuestasCorrectas, preguntaActual } = estado;
-    // Avance de etapa
-    const enRango = (n) =>
-      n > GAME_CONFIG.GROWTH_THRESHOLD.MIN &&
-      n < GAME_CONFIG.GROWTH_THRESHOLD.MAX;
-    if (
-      etapa < GAME_CONFIG.MAX_PLANT_STAGE &&
-      enRango(agua) &&
-      enRango(sol) &&
-      respuestasCorrectas >= 3
-    ) {
-      dispatch({ type: "ADVANCE_STAGE" });
-      playCrecimiento();
-      setTimeout(() => dispatch({ type: "HIDE_CELEBRATION" }), 4000);
+    if (juegoIniciado) {
+      const intervalo = setInterval(
+        () => dispatch({ type: "GAME_TICK" }),
+        GAME_CONFIG.GAME_TICK_INTERVAL_MS
+      );
+      return () => clearInterval(intervalo);
     }
-    // Mostrar pregunta cuando un recurso llega al máximo
-    if (!preguntaActual && (agua >= 100 || sol >= 100)) {
-      dispatch({ type: "SHOW_QUESTION" });
+  }, [juegoIniciado]);
+
+  // Lógica de juego (avance, preguntas), solo si el juego está iniciado.
+  useEffect(() => {
+    if (juegoIniciado && !estado.isLoading) {
+      const { etapa, agua, sol, respuestasCorrectas, preguntaActual } = estado;
+      const enRango = (n) =>
+        n > GAME_CONFIG.GROWTH_THRESHOLD.MIN &&
+        n < GAME_CONFIG.GROWTH_THRESHOLD.MAX;
+      if (
+        etapa < GAME_CONFIG.MAX_PLANT_STAGE &&
+        enRango(agua) &&
+        enRango(sol) &&
+        respuestasCorrectas >= 3
+      ) {
+        dispatch({ type: "ADVANCE_STAGE" });
+        playCrecimiento();
+        setTimeout(() => dispatch({ type: "HIDE_CELEBRATION" }), 4000);
+      }
+      if (!preguntaActual && (agua >= 100 || sol >= 100)) {
+        dispatch({ type: "SHOW_QUESTION" });
+      }
     }
   }, [
     estado.agua,
     estado.sol,
     estado.respuestasCorrectas,
     estado.etapa,
+    estado.isLoading,
     playCrecimiento,
+    juegoIniciado,
   ]);
 
-  // --- ACCIONES (Ahora más simples, solo despachan) ---
+  // --- ACCIONES (Sin cambios) ---
   const acciones = {
     soltarHerramienta: useCallback((resourceId) => {
       dispatch({
@@ -178,7 +188,7 @@ export const useHuertoState = () => {
       });
     }, []),
 
-    agitarHerramienta: useCallback((resourceId, delta, over) => {
+    agitarHerramienta: useCallback((resourceId, delta) => {
       const datos = shakeDataRef.current[resourceId];
       const now = Date.now();
       const { TIME_MS, DISTANCE_PX, COUNT } = GAME_CONFIG.SHAKE_DETECTION;

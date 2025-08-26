@@ -1,0 +1,74 @@
+/* src/styles/Dashboard.css */
+
+/* Estilos para el fondo degradado animado */
+@keyframes gradientBG {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* Estilos y animación para las tarjetas de juego */
+.game-card {
+  transition: all 0.3s ease-in-out;
+}
+.game-card:hover {
+  transform: translateY(-10px) scale(1.03);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+.game-card:hover .icon-container {
+  animation: pulse-icon 1.5s infinite;
+}
+.game-card:hover .play-button {
+  transform: scale(1.05);
+}
+.play-button {
+  transition: transform 0.2s ease-in-out;
+}
+@keyframes pulse-icon {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Estilos y animación para la mascota flotante */
+.mascot-float {
+  animation: float 3s ease-in-out infinite;
+}
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-15px);
+  }
+}
+
+/* Estilos y animación para las burbujas del fondo */
+.bubble {
+  position: absolute;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 50%;
+  bottom: -150px;
+  animation: rise linear infinite;
+}
+@keyframes rise {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(-120vh);
+  }
+}

@@ -1,103 +1,188 @@
-// client/src/components/LoginForm.jsx
+// src/components/modules/LoginForm.jsx
 
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
-import { useAuth } from "../../context/AuthContext"; // 2. Importamos el hook de autenticación
-import { login as loginService } from "../../services/authService";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
+import soundService from "../../services/soundService";
+import ThreeJSBackground from "../common/ThreeJSBackground";
+import "./LoginForm.css"; // Crearemos este archivo CSS
+
+const Logo = () => (
+  <div className="w-80 h-80">
+    <svg id="logo" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <g id="logo-main">
+        <path d="M85,15 H45 L45,45 L65,45 L65,35 L85,35 Z" fill="#F97316" />
+        <path d="M45,45 L25,65 L25,85 L45,65 Z" fill="#F97316" />
+      </g>
+      <g id="logo-accent">
+        <path d="M65,45 L45,65 L45,45 Z" fill="#FBBF24" />
+      </g>
+      <line
+        id="logo-line"
+        x1="35"
+        y1="75"
+        x2="60"
+        y2="80"
+        stroke="#FBBF24"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+      />
+      <g id="logo-tag" transform="translate(70, 85) rotate(15)">
+        <rect x="-12" y="-12" width="24" height="24" fill="#FBBF24" rx="4" />
+        <circle cx="6" cy="-4" r="3" fill="#1E293B" />
+      </g>
+    </svg>
+  </div>
+);
+
+const SuccessState = () => (
+  <div className="text-center animate-slide-in-right">
+    <svg
+      className="w-24 h-24 mx-auto text-green-500"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+    >
+      <path
+        className="success-checkmark"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="2"
+        d="M5 13l4 4L19 7"
+      />
+    </svg>
+    <h2 className="text-3xl font-bold text-gray-800 mt-4">¡Bienvenido!</h2>
+    <p className="text-gray-600 mt-2">Redirigiendo a tus aventuras...</p>
+  </div>
+);
 
 function LoginForm() {
-  const { login } = useAuth(); // 👈 3. Obtenemos la acción 'login' de nuestro contexto
+  const { login } = useAuth();
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({ email: "", password: "" });
-  const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [isSuccess, setIsSuccess] = useState(false);
 
-  const handleInputChange = (event) => {
-    const { name, value } = event.target;
-    setFormData({ ...formData, [name]: value });
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.id]: e.target.value });
   };
 
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-    setError("");
+  const handleSubmit = async (e) => {
+    e.preventDefault();
     setIsLoading(true);
+    setError("");
 
     try {
-      // 4. Llamamos a nuestro servicio centralizado, no a axios directamente.
-      const response = await loginService(formData.email, formData.password);
-
-      // 5. Llamamos a la acción 'login' del contexto.
-      // ¡Esta única línea se encarga de guardar el token y redirigir al usuario!
-      login(response.token);
+      await login(formData.email, formData.password);
+      soundService.playSuccess();
+      setIsSuccess(true);
+      setTimeout(() => {
+        navigate("/dashboard");
+      }, 1500); // Espera 1.5s para mostrar la animación de éxito
     } catch (err) {
-      setError("Credenciales incorrectas. Inténtalo de nuevo.");
-      console.error("Error en el inicio de sesión:", err);
+      soundService.playError();
+      setError("Credenciales incorrectas.");
+      document.getElementById("card-content").classList.add("shake");
+      setTimeout(() => {
+        document.getElementById("card-content")?.classList.remove("shake");
+      }, 500);
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="bg-gray-900 min-h-screen flex items-center justify-center p-4">
-      <div className="bg-gray-800 p-8 rounded-2xl shadow-lg w-full max-w-sm">
-        <div className="w-20 h-20 mx-auto -mt-20 mb-6 bg-gray-700 rounded-full flex items-center justify-center border-4 border-gray-800">
-          <i className="fa-solid fa-user text-4xl text-cyan-400"></i>
+    <div className="min-h-screen p-4 flex items-center justify-center">
+      <ThreeJSBackground />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-6xl mx-auto items-center h-full relative">
+        <div className="hidden md:flex flex-col items-center justify-center animate-slide-in-left">
+          <Logo />
+          <h1 className="text-5xl font-bold text-white mt-6 drop-shadow-lg">
+            Laboratorio Digital
+          </h1>
+          <p className="text-indigo-200 text-xl mt-2">
+            ¡Donde aprender es una aventura!
+          </p>
         </div>
 
-        <h2 className="text-center text-3xl font-bold text-white mb-6">
-          Iniciar Sesión
-        </h2>
-
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {error && (
-            <p className="text-red-400 text-center bg-red-900/50 p-3 rounded-lg">
-              {error}
-            </p>
-          )}
-
-          <div className="relative">
-            <i className="fa-solid fa-envelope absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
-            <input
-              type="email"
-              name="email"
-              placeholder="Email"
-              value={formData.email}
-              onChange={handleInputChange}
-              className="w-full bg-gray-700 text-white py-3 pl-12 pr-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500"
-              required
-            />
-          </div>
-
-          <div className="relative">
-            <i className="fa-solid fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
-            <input
-              type="password"
-              name="password"
-              placeholder="Contraseña"
-              value={formData.password}
-              onChange={handleInputChange}
-              className="w-full bg-gray-700 text-white py-3 pl-12 pr-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500"
-              required
-            />
-          </div>
-
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="w-full bg-cyan-500 text-gray-900 font-bold py-3 rounded-lg hover:bg-cyan-600 transition-colors disabled:opacity-50 disabled:cursor-wait"
+        <div
+          className="flex items-center justify-center w-full animate-slide-in-right"
+          style={{ animationDelay: "0.2s" }}
+        >
+          <main
+            id="card-content"
+            className="w-full max-w-md bg-white/80 backdrop-blur-sm rounded-3xl p-8 shadow-2xl transition-all duration-500"
           >
-            {isLoading ? "Entrando..." : "LOGIN"}
-          </button>
-        </form>
-
-        <p className="text-center text-gray-400 mt-6">
-          ¿No tienes una cuenta?{" "}
-          <Link
-            to="/registro"
-            className="text-cyan-400 font-bold hover:underline"
-          >
-            Regístrate
-          </Link>
-        </p>
+            {isSuccess ? (
+              <SuccessState />
+            ) : (
+              <div>
+                <h2 className="text-3xl font-bold text-center text-gray-800 mb-6">
+                  Iniciar Sesión
+                </h2>
+                {error && (
+                  <p className="text-center text-red-500 mb-4">{error}</p>
+                )}
+                <form onSubmit={handleSubmit} className="space-y-6">
+                  <div className="form-group relative">
+                    <input
+                      type="email"
+                      id="email"
+                      onChange={handleChange}
+                      value={formData.email}
+                      className="w-full px-4 py-3 bg-white/50 border-2 border-indigo-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition pt-6"
+                      required
+                      placeholder=" "
+                    />
+                    <label
+                      htmlFor="email"
+                      className="absolute left-4 top-3 text-gray-600 pointer-events-none"
+                    >
+                      Tu Correo Electrónico
+                    </label>
+                  </div>
+                  <div className="form-group relative">
+                    <input
+                      type="password"
+                      id="password"
+                      onChange={handleChange}
+                      value={formData.password}
+                      className="w-full px-4 py-3 bg-white/50 border-2 border-indigo-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition pt-6"
+                      required
+                      placeholder=" "
+                    />
+                    <label
+                      htmlFor="password"
+                      className="absolute left-4 top-3 text-gray-600 pointer-events-none"
+                    >
+                      Tu Contraseña Secreta
+                    </label>
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={isLoading}
+                    className={`login-button w-full text-white font-bold py-3 px-8 rounded-full shadow-lg hover:opacity-90 transition-transform transform hover:scale-105 h-[48px] flex items-center justify-center ${
+                      isLoading ? "loading" : ""
+                    }`}
+                  >
+                    <span className="button-text">¡Entrar!</span>
+                    <div className="spinner"></div>
+                  </button>
+                </form>
+                <p className="text-center text-gray-600 text-sm mt-6">
+                  ¿Aún no tienes una cuenta?{" "}
+                  <Link
+                    to="/registro"
+                    className="font-bold text-orange-600 hover:underline"
+                  >
+                    ¡Regístrate aquí!
+                  </Link>
+                </p>
+              </div>
+            )}
+          </main>
+        </div>
       </div>
     </div>
   );

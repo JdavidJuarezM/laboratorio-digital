@@ -1,5 +1,3 @@
-// client/src/components/HuertoVirtual/HuertoVirtual.jsx
-
 import React, { useState } from "react";
 import { DndContext, useDroppable } from "@dnd-kit/core";
 import { AnimatePresence } from "framer-motion";
@@ -14,9 +12,12 @@ import QuizModal from "./components/QuizModal";
 import IndicadorGuardando from "./components/IndicadorGuardando";
 import Celebration from "./components/Celebration";
 import TutorialBubble from "./components/TutorialBubble";
+import HuertoBienvenida from "./components/HuertoBienvenida";
 
 function HuertoVirtual() {
-  const { estado, acciones } = useHuertoState();
+  const [juegoIniciado, setJuegoIniciado] = useState(false);
+
+  const { estado, acciones } = useHuertoState(juegoIniciado);
   const {
     etapa,
     agua,
@@ -27,7 +28,9 @@ function HuertoVirtual() {
     etapaCelebracion,
     pasoTutorial,
     isLoading,
+    error,
   } = estado;
+
   const {
     soltarHerramienta,
     agitarHerramienta,
@@ -41,12 +44,9 @@ function HuertoVirtual() {
   const [playDropSol] = useSound("/sonido-sol1.mp3", { volume: 0.1 });
 
   const handleDragStart = ({ active }) => setActiveId(active.id);
-
-  // 👇 La lógica de agitar ahora se pasa al hook
   const handleDragMove = ({ active, delta }) => {
     agitarHerramienta(active.id, delta);
   };
-
   const handleDragEnd = ({ active, over }) => {
     if (over?.id === "planta-area") {
       soltarHerramienta(active.id);
@@ -59,6 +59,10 @@ function HuertoVirtual() {
 
   const { setNodeRef, isOver } = useDroppable({ id: "planta-area" });
 
+  if (!juegoIniciado) {
+    return <HuertoBienvenida onStart={() => setJuegoIniciado(true)} />;
+  }
+
   if (isLoading) {
     return (
       <div className="flex h-full w-full items-center justify-center bg-gray-800 text-white text-xl">
@@ -67,15 +71,25 @@ function HuertoVirtual() {
     );
   }
 
+  if (error) {
+    return (
+      <div className="flex h-full w-full items-center justify-center bg-red-900/80 text-white text-xl p-4 text-center rounded-3xl">
+        <div>
+          <p className="font-bold text-2xl mb-2">¡Oh no! Algo salió mal.</p>
+          <p>{error}</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    // 👇 Activamos onDragMove
     <DndContext
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
       onDragMove={handleDragMove}
     >
       <div
-        className="flex h-full w-full text-white p-4 gap-4"
+        className="text-white p-4 gap-4 w-full h-full flex"
         style={{
           backgroundImage: `url('/fondo-huerto.jpg')`,
           backgroundSize: "cover",
@@ -84,11 +98,12 @@ function HuertoVirtual() {
       >
         <AnimatePresence>
           {etapaCelebracion !== null && (
-            // 👇 Pasamos el nombre de la etapa para un mensaje más claro
             <Celebration etapaNombre={nombresEtapas[etapaCelebracion]} />
           )}
         </AnimatePresence>
         {isSaving && <IndicadorGuardando />}
+
+        {/* --- ESTE ES EL BLOQUE DE CÓDIGO DE LAS HERRAMIENTAS --- */}
         <aside className="w-1/5 bg-gray-800/50 p-4 rounded-xl flex flex-col items-center gap-4 self-start">
           <h3 className="text-lg font-bold">Herramientas</h3>
           {["agua", "sol"].map((toolId) => (
@@ -109,6 +124,8 @@ function HuertoVirtual() {
             </div>
           ))}
         </aside>
+        {/* --- FIN DEL BLOQUE DE LAS HERRAMIENTAS --- */}
+
         <main className="w-4/5 flex flex-col gap-4">
           <div className="bg-gray-800/50 p-4 rounded-xl flex justify-between items-center">
             <h2 className="text-xl font-bold">
@@ -138,6 +155,7 @@ function HuertoVirtual() {
             </div>
           </div>
         </main>
+
         <AnimatePresence>
           {preguntaActual && (
             <QuizModal

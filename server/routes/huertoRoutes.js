@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+console.log("✅ CONFIRMADO: El archivo huertoRoutes.js se ha cargado.");
 const {
   getHuertoState,
   updateHuertoState,

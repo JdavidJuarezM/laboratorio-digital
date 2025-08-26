@@ -1,43 +1,68 @@
-// client/src/context/AuthContext.jsx
+import React, { createContext, useState, useContext, useEffect } from "react";
+import {
+  login as loginService,
+  register as registerService,
+} from "../services/authService";
+import apiClient from "../services/apiClient";
 
-import React, { createContext, useState, useContext } from "react";
-import { useNavigate } from "react-router-dom";
-
-// 1. Creamos el Contexto
 const AuthContext = createContext();
 
-// 2. Creamos un hook personalizado para usar el contexto fácilmente
-export const useAuth = () => {
-  return useContext(AuthContext);
-};
+export const useAuth = () => useContext(AuthContext);
 
-// 3. Creamos el Proveedor del Contexto (el "cerebro" de la autenticación)
 export const AuthProvider = ({ children }) => {
-  const [token, setToken] = useState(localStorage.getItem("token"));
-  const [usuario, setUsuario] = useState(null); // Aquí guardaremos los datos del usuario en el futuro
-  const navigate = useNavigate();
+  const [user, setUser] = useState(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const loginAccion = (newToken) => {
-    localStorage.setItem("token", newToken);
-    setToken(newToken);
-    // En el futuro, aquí recibirías y guardarías los datos del usuario
-    // setUsuario(datosUsuario);
-    navigate("/dashboard/huerto"); // Redirige al dashboard después del login
+  useEffect(() => {
+    const validarToken = async () => {
+      const token = localStorage.getItem("token");
+      if (token) {
+        apiClient.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+        try {
+          const { data } = await apiClient.get("/maestros/perfil");
+          setUser(data);
+          setIsAuthenticated(true);
+        } catch (error) {
+          localStorage.removeItem("token");
+          setIsAuthenticated(false);
+        }
+      }
+      setIsLoading(false);
+    };
+    validarToken();
+  }, []);
+
+  const login = async (email, password) => {
+    const { token, maestro } = await loginService(email, password);
+    localStorage.setItem("token", token);
+    apiClient.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+    setUser(maestro);
+    setIsAuthenticated(true);
   };
 
-  const logoutAccion = () => {
+  // --- 👇 NUEVA FUNCIÓN AÑADIDA 👇 ---
+  const register = async (nombre, email, password) => {
+    // 1. Llama al servicio para crear el nuevo usuario
+    await registerService(nombre, email, password);
+    // 2. Si el registro es exitoso, llama a la función de login para autenticarlo
+    await login(email, password);
+  };
+
+  const logout = () => {
     localStorage.removeItem("token");
-    setToken(null);
-    setUsuario(null);
-    navigate("/"); // Redirige al login después de cerrar sesión
+    delete apiClient.defaults.headers.common["Authorization"];
+    setUser(null);
+    setIsAuthenticated(false);
   };
 
   const value = {
-    token,
-    usuario,
-    isAuthenticated: !!token, // Es true si hay un token, false si no
-    login: loginAccion,
-    logout: logoutAccion,
+    user,
+    isAuthenticated,
+    isLoading,
+    login,
+    register, // <-- Exportamos la nueva función
+    logout,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
