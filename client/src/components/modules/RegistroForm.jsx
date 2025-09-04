@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import soundService from "../../services/soundService";
 import ThreeJSBackground from "../common/ThreeJSBackground";
-import "./LoginForm.css"; // Reutilizamos el mismo archivo CSS del Login
+import "./LoginForm.css";
 
 const Logo = () => (
   <div className="w-80 h-80">

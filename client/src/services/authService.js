@@ -16,10 +16,8 @@ export const login = async (email, password) => {
   }
 };
 
-// --- 👇 FUNCIÓN AÑADIDA 👇 ---
 export const register = async (nombre, email, password) => {
   try {
-    // La ruta para registrar es POST a /api/maestros, según tu backend
     const { data } = await apiClient.post("/maestros", {
       nombre,
       email,

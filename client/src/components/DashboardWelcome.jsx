@@ -9,8 +9,7 @@ import {
   EcosistemasIcon,
   RocketIcon,
   LogoutIcon,
-} from "./Icons"; // Asumimos un archivo de iconos
-
+} from "./Icons";
 const DashboardWelcome = () => {
   const { logout } = useAuth();
 
@@ -48,7 +47,7 @@ const DashboardWelcome = () => {
           title="Ecosistemas"
           description="Coloca cada animal y planta en su hábitat correcto y observa."
           buttonColor="bg-blue-500 hover:bg-blue-600"
-          linkTo="/dashboard/ecosistemas" // Ruta futura
+          linkTo="/dashboard/ecosistemas"
         />
       </main>
 

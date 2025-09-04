@@ -5,8 +5,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import soundService from "../../services/soundService";
 import ThreeJSBackground from "../common/ThreeJSBackground";
-import "./LoginForm.css"; // Crearemos este archivo CSS
-
+import "./LoginForm.css";
 const Logo = () => (
   <div className="w-80 h-80">
     <svg id="logo" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
@@ -79,7 +78,7 @@ function LoginForm() {
       setIsSuccess(true);
       setTimeout(() => {
         navigate("/dashboard");
-      }, 1500); // Espera 1.5s para mostrar la animación de éxito
+      }, 1500);
     } catch (err) {
       soundService.playError();
       setError("Credenciales incorrectas.");

@@ -41,11 +41,9 @@ export const AuthProvider = ({ children }) => {
     setIsAuthenticated(true);
   };
 
-  // --- 👇 NUEVA FUNCIÓN AÑADIDA 👇 ---
   const register = async (nombre, email, password) => {
-    // 1. Llama al servicio para crear el nuevo usuario
     await registerService(nombre, email, password);
-    // 2. Si el registro es exitoso, llama a la función de login para autenticarlo
+
     await login(email, password);
   };
 
@@ -61,7 +59,7 @@ export const AuthProvider = ({ children }) => {
     isAuthenticated,
     isLoading,
     login,
-    register, // <-- Exportamos la nueva función
+    register,
     logout,
   };
 

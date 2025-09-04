@@ -1,6 +1,5 @@
 // client/src/constants/bancoDePreguntas.js
 
-// 👇 La palabra 'export' es la clave para que otros archivos puedan usar esta variable.
 export const bancoDePreguntas = {
   0: [
     // Etapa 0: Germinación
