@@ -10,8 +10,9 @@ import RegistroForm from "./components/modules/RegistroForm";
 import DashboardPage from "./pages/DashboardPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import HuertoVirtual from "./components/HuertoVirtual/HuertoVirtual";
+import Vocabulario from "./components/Vocabulario/Vocabulario"; // Importa el nuevo juego
 import DashboardWelcome from "./components/DashboardWelcome";
-import GameFrame from "./components/GameFrame"; // <-- 1. Importa el nuevo GameFrame
+import GameFrame from "./components/GameFrame";
 
 function App() {
   useEffect(() => {
@@ -20,15 +21,13 @@ function App() {
       soundService.start();
     };
 
-    // Añadimos un listener para el primer clic que se ejecuta una sola vez.
     window.addEventListener("click", initializeAudio, { once: true });
 
-    // Limpiamos el listener si el componente se desmonta.
     return () => {
       window.removeEventListener("click", initializeAudio);
     };
-  }, []); // El array vacío asegura que este efecto se ejecute solo una vez.
-  // --- FIN DEL BLOQUE AÑADIDO --
+  }, []);
+
   return (
     <Routes>
       {/* Rutas públicas */}
@@ -44,11 +43,8 @@ function App() {
           </ProtectedRoute>
         }
       >
-        {/* Ruta por defecto para /dashboard */}
         <Route index element={<DashboardWelcome />} />
 
-        {/* --- 2. CORRECCIÓN AQUÍ --- */}
-        {/* La ruta del juego ahora se envuelve en el GameFrame */}
         <Route
           path="huerto"
           element={
@@ -58,8 +54,15 @@ function App() {
           }
         />
 
-        {/* Aquí puedes añadir futuros juegos, siguiendo el mismo patrón */}
-        {/* <Route path="supermercado" element={<GameFrame title="Supermercado"><Supermercado /></GameFrame>} /> */}
+        {/* Nueva ruta para el juego de vocabulario */}
+        <Route
+          path="vocabulario"
+          element={
+            <GameFrame title="Juego de Vocabulario">
+              <Vocabulario />
+            </GameFrame>
+          }
+        />
       </Route>
     </Routes>
   );

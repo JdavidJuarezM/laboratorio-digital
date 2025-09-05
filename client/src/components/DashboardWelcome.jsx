@@ -9,7 +9,9 @@ import {
   EcosistemasIcon,
   RocketIcon,
   LogoutIcon,
+  VocabularioIcon, // Importa el nuevo icono
 } from "./Icons";
+
 const DashboardWelcome = () => {
   const { logout } = useAuth();
 
@@ -35,12 +37,22 @@ const DashboardWelcome = () => {
           buttonColor="bg-green-500 hover:bg-green-600"
           linkTo="/dashboard/huerto"
         />
+
+        {/* Nueva tarjeta para el juego de vocabulario */}
+        <GameCard
+          icon={<VocabularioIcon className="w-16 h-16" />}
+          title="Juego de Vocabulario"
+          description="Aprende nuevas palabras de forma divertida."
+          buttonColor="bg-blue-500 hover:bg-blue-600"
+          linkTo="/dashboard/vocabulario"
+        />
+
         <GameCard
           icon={<SupermercadoIcon className="w-16 h-16" />}
           title="Supermercado"
           description="Resuelve problemas de sumas y restas mientras haces la compra."
           buttonColor="bg-yellow-500 hover:bg-yellow-600"
-          linkTo="/dashboard/supermercado" // Ruta futura
+          linkTo="/dashboard/supermercado"
         />
         <GameCard
           icon={<EcosistemasIcon className="w-16 h-16" />}

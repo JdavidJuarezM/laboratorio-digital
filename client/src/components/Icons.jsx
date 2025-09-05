@@ -133,3 +133,29 @@ export const LogoutIcon = (props) => (
     />
   </svg>
 );
+
+export const VocabularioIcon = (props) => (
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    {...props}
+  >
+    <path
+      d="M4 18.5V5.5C4 4.94772 4.44772 4.5 5 4.5H15C15.5523 4.5 16 4.94772 16 5.5V18.5"
+      stroke="#3b82f6"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M16 18.5L20 16V5.5C20 4.94772 19.5523 4.5 19 4.5H16"
+      stroke="#3b82f6"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path d="M7 8H13" stroke="#60a5fa" strokeWidth="2" strokeLinecap="round" />
+    <path d="M7 12H10" stroke="#60a5fa" strokeWidth="2" strokeLinecap="round" />
+  </svg>
+);
