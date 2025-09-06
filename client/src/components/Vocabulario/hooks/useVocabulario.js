@@ -1,5 +1,3 @@
-// src/components/Vocabulario/hooks/useVocabulario.js
-
 import { useState, useEffect, useCallback, useRef } from "react";
 import { words } from "../constants/wordList";
 import {
@@ -46,6 +44,7 @@ export const useVocabulario = () => {
     type: "",
   });
   const timerIntervalRef = useRef(null);
+  const hasTimeExpired = useRef(false); // 👈 fix para evitar loop infinito
 
   useEffect(() => {
     const savedScore = localStorage.getItem("juegoVocabularioHighScore");
@@ -98,6 +97,7 @@ export const useVocabulario = () => {
 
   const nextWord = useCallback(() => {
     clearInterval(timerIntervalRef.current);
+    hasTimeExpired.current = false; // 👈 reset de la bandera para la próxima palabra
 
     if (wordsAvailable.length === 0) {
       setGameState("end");
@@ -114,8 +114,6 @@ export const useVocabulario = () => {
     setUserInput([]);
     setHasHintBeenUsed(false);
 
-    setGameStats((prev) => ({ ...prev, attempts: prev.attempts + 1 }));
-
     if (settings.timerEnabled) {
       const initialTime = getTimerForDifficulty();
       setTimer(initialTime);
@@ -130,7 +128,6 @@ export const useVocabulario = () => {
     getTimerForDifficulty,
   ]);
 
-  // LÓGICA DE INICIO ACTUALIZADA
   const startGame = useCallback(() => {
     initAudio();
     setGameStats({
@@ -140,20 +137,13 @@ export const useVocabulario = () => {
       longestStreak: 0,
       attempts: 0,
     });
-
-    // 1. Filtrar todas las palabras por la dificultad seleccionada
     const filteredWords = words.filter(
       (w) => w.difficulty === settings.difficulty
     );
+    const available = shuffle(filteredWords).slice(0, 10);
 
-    // 2. Mezclar (barajar) la lista completa de palabras filtradas
-    const shuffled = shuffle(filteredWords);
-
-    // 3. Tomar solo las primeras 10 palabras de la lista mezclada
-    const gameWords = shuffled.slice(0, 10);
-
-    setWordsAvailable(gameWords);
-    setCurrentWord(null); // Esto asegura que el useEffect para la primera palabra se active
+    setWordsAvailable(available);
+    setCurrentWord(null);
     setGameState("playing");
   }, [settings.difficulty]);
 
@@ -163,8 +153,15 @@ export const useVocabulario = () => {
     }
   }, [gameState, wordsAvailable, currentWord, nextWord]);
 
+  // 👇 FIX: evitar loop cuando timer llega a 0
   useEffect(() => {
-    if (timer === 0 && settings.timerEnabled && gameState === "playing") {
+    if (
+      timer === 0 &&
+      settings.timerEnabled &&
+      gameState === "playing" &&
+      !hasTimeExpired.current
+    ) {
+      hasTimeExpired.current = true;
       showFloatingFeedback("¡Tiempo!", "error");
       audioEffects.playWrong();
       setGameStats((prev) => ({ ...prev, streak: 0 }));

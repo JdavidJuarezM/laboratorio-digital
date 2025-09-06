@@ -14,7 +14,7 @@ const GameFrame = ({ children, title }) => {
   };
 
   return (
-    <div className="relative bg-gray-800/90 backdrop-blur-sm rounded-3xl shadow-2xl p-6 h-full flex flex-col">
+    <div className="h-full flex flex-col">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-3xl font-bold text-white">{title}</h2>
         <button
@@ -26,7 +26,7 @@ const GameFrame = ({ children, title }) => {
           Salir del Juego
         </button>
       </div>
-      <div className="flex-grow bg-gray-900 rounded-xl overflow-hidden">
+      <div className="flex-grow">
         {children} {/* Aquí se renderizará el juego (HuertoVirtual) */}
       </div>
     </div>
