@@ -46,6 +46,7 @@ export const HuertoIcon = (props) => (
 );
 
 // Ícono para la tarjeta del Supermercado
+// Ícono para la tarjeta del Supermercado
 export const SupermercadoIcon = (props) => (
   <svg
     viewBox="0 0 24 24"

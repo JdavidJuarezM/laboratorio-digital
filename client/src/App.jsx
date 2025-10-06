@@ -10,7 +10,8 @@ import RegistroForm from "./components/modules/RegistroForm";
 import DashboardPage from "./pages/DashboardPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import HuertoVirtual from "./components/HuertoVirtual/HuertoVirtual";
-import Vocabulario from "./components/Vocabulario/Vocabulario"; // Importa el nuevo juego
+import Vocabulario from "./components/Vocabulario/Vocabulario";
+import Supermercado from "./components/Supermercado/Supermercado"; // <-- IMPORTA EL NUEVO JUEGO
 import DashboardWelcome from "./components/DashboardWelcome";
 import GameFrame from "./components/GameFrame";
 
@@ -43,8 +44,10 @@ function App() {
           </ProtectedRoute>
         }
       >
+        {/* La página principal del dashboard */}
         <Route index element={<DashboardWelcome />} />
 
+        {/* Rutas para cada juego anidadas dentro de /dashboard */}
         <Route
           path="huerto"
           element={
@@ -53,13 +56,19 @@ function App() {
             </GameFrame>
           }
         />
-
-        {/* Nueva ruta para el juego de vocabulario */}
         <Route
           path="vocabulario"
           element={
             <GameFrame title="Juego de Vocabulario">
               <Vocabulario />
+            </GameFrame>
+          }
+        />
+        <Route
+          path="supermercado"
+          element={
+            <GameFrame title="Supermercado Matemático">
+              <Supermercado />
             </GameFrame>
           }
         />

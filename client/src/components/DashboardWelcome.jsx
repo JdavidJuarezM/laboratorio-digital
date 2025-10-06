@@ -9,7 +9,7 @@ import {
   EcosistemasIcon,
   RocketIcon,
   LogoutIcon,
-  VocabularioIcon, // Importa el nuevo icono
+  VocabularioIcon,
 } from "./Icons";
 
 const DashboardWelcome = () => {
