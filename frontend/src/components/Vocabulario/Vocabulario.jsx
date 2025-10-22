@@ -30,7 +30,7 @@ const Vocabulario = () => {
   const [showHelp, setShowHelp] = useState(false);
 
   return (
-    <div className="w-full h-full flex items-center justify-center p-4 relative">
+    <div className="w-full h-full flex flex-col items-center justify-start pt-4 px-4 relative overflow-y-auto">
       {gameState === "start" && (
         <StartScreen
           startGame={startGame}
