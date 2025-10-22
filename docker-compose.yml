@@ -1,0 +1,18 @@
+version: '3.8' # Versión de la sintaxis de Docker Compose
+
+services:
+  mysql_db: # Nombre del servicio
+    image: mysql:8.0 # Imagen oficial de MySQL, versión 8.0
+    container_name: laboratorio-mysql # Nombre específico para el contenedor
+    restart: unless-stopped # Reinicia el contenedor si se detiene, a menos que lo detengas tú
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD} # Contraseña para el usuario root
+      MYSQL_DATABASE: ${MYSQL_DATABASE} # Nombre de la base de datos a crear
+    ports:
+      - "${MYSQL_LOCAL_PORT}:3306" # Mapea el puerto 3306 del contenedor al puerto local que definas en .env
+    volumes:
+      - mysql_data:/var/lib/mysql # Persiste los datos de la base de datos en un volumen llamado 'mysql_data'
+
+volumes: # Define el volumen para persistir los datos
+  mysql_data:
+    driver: local

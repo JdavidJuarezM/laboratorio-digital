@@ -1,7 +1,6 @@
-// client/src/services/huertoService.js
+// frontend/src/services/huertoService.js
 
-// La importación de tu apiClient es correcta.
-// Asegúrate de que el archivo se llame 'apiClient.js' o 'api.js' según tu estructura final.
+// Importamos nuestro apiClient configurado (con baseURL y interceptor JWT)
 import apiClient from "./apiClient";
 
 /**
@@ -9,35 +8,37 @@ import apiClient from "./apiClient";
  */
 
 /**
- * Obtiene el estado actual del huerto desde el servidor.
- * @returns {Promise<object|null>} El estado del huerto o null si hay un error.
+ * Obtiene el estado actual del huerto del usuario autenticado desde el servidor.
+ * @returns {Promise<object|null>} El estado del huerto ({ etapa, agua, sol, respuestasCorrectas }) o null si hay un error.
  */
-// 👇 CORRECCIÓN: Renombramos la función para que coincida con la importación.
 export const getEstadoHuerto = async () => {
   try {
+    // Hacemos un GET a /api/huerto. apiClient añadirá el token JWT automáticamente.
     const { data } = await apiClient.get("/huerto");
-    // El backend devuelve el objeto completo, pero el frontend solo necesita el progreso_json
-    return data;
+    // El backend ahora devuelve directamente el DTO con el estado
+    return data; // Devuelve { etapa, agua, sol, respuestasCorrectas }
   } catch (error) {
-    console.error("Error al cargar el estado del huerto:", error);
-    // Es mejor devolver null para que el hook sepa que no se pudo cargar el estado.
+    console.error("Error al cargar el estado del huerto:", error.response?.data || error.message);
+    // Devolvemos null o propagamos el error según cómo lo maneje el hook useHuertoState
+    // Devolver null puede ser más simple para el hook
     return null;
   }
 };
 
 /**
- * Guarda el nuevo estado del huerto en el servidor.
+ * Guarda el nuevo estado del huerto en el servidor para el usuario autenticado.
  * @param {object} nuevoEstado - El nuevo estado a guardar ({ etapa, agua, sol, respuestasCorrectas }).
- * @returns {Promise<object>} La respuesta del servidor.
+ * @returns {Promise<object>} La respuesta del servidor (generalmente un mensaje de éxito).
  */
-// 👇 CORRECCIÓN: Renombramos la función para que coincida con la importación.
 export const guardarEstadoHuerto = async (nuevoEstado) => {
   try {
+    // Hacemos un POST a /api/huerto/actualizar con el nuevo estado en el cuerpo.
+    // apiClient añadirá el token JWT automáticamente.
     const { data } = await apiClient.post("/huerto/actualizar", nuevoEstado);
-    return data;
+    return data; // Devuelve { message: "Progreso guardado exitosamente" }
   } catch (error) {
-    console.error("Error al guardar el estado del huerto:", error);
-    // Propagamos el error para que el componente que llama pueda manejarlo si es necesario.
+    console.error("Error al guardar el estado del huerto:", error.response?.data || error.message);
+    // Propagamos el error para que el hook useHuertoState pueda saber si falló el guardado
     throw error;
   }
 };
