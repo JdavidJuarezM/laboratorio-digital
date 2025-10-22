@@ -3,6 +3,10 @@ node_modules/
 .env 
 # Archivos de entorno (si los usas en el futuro)
 .env
+target
+.idea
+.gitignore
+
 
 # Logs
 npm-debug.log*
