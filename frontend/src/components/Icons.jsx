@@ -160,3 +160,34 @@ export const VocabularioIcon = (props) => (
     <path d="M7 12H10" stroke="#60a5fa" strokeWidth="2" strokeLinecap="round" />
   </svg>
 );
+
+export const ReciclajeIcon = (props) => (
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    {...props}
+  >
+    <path
+      d="M10 12L10 3.25C10 3.25 10 1.25 12 1.25C14 1.25 14 3.25 14 3.25L14 12L17.25 12C17.25 12 19.25 12 19.25 14C19.25 16 17.25 16 17.25 16L14 16L14 20.75C14 20.75 14 22.75 12 22.75C10 22.75 10 20.75 10 20.75L10 16L6.75 16C6.75 16 4.75 16 4.75 14C4.75 12 6.75 12 6.75 12L10 12Z"
+      stroke="#10b981"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M10 12L6.75 16"
+      stroke="#10b981"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M14 12L17.25 16"
+      stroke="#10b981"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);

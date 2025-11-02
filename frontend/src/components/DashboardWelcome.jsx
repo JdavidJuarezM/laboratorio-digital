@@ -10,6 +10,7 @@ import {
   RocketIcon,
   LogoutIcon,
   VocabularioIcon,
+  ReciclajeIcon, // <-- 1. IMPORTAR EL NUEVO ICONO
 } from "./Icons";
 
 const DashboardWelcome = () => {
@@ -54,6 +55,16 @@ const DashboardWelcome = () => {
           buttonColor="bg-yellow-500 hover:bg-yellow-600"
           linkTo="/dashboard/supermercado"
         />
+
+        {/* <-- 2. AÑADIR LA NUEVA TARJETA DE JUEGO --> */}
+        <GameCard
+          icon={<ReciclajeIcon className="w-16 h-16" />}
+          title="Misión Reciclaje"
+          description="Clasifica la basura en los contenedores correctos y salva el planeta."
+          buttonColor="bg-green-500 hover:bg-green-600"
+          linkTo="/dashboard/reciclaje"
+        />
+
         <GameCard
           icon={<EcosistemasIcon className="w-16 h-16" />}
           title="Ecosistemas"

@@ -6,7 +6,7 @@
 
 // Se recomienda usar variables de entorno para la URL de la API en producción.
 export const API_URL =
-  process.env.REACT_APP_API_URL || "http://localhost:5000/api";
+  import.meta.env.VITE_API_URL || "http://localhost:8080/api";
 
 // Configuración del juego
 export const GAME_TICK_INTERVAL = 3000; // ms

@@ -14,6 +14,7 @@ import Vocabulario from "./components/Vocabulario/Vocabulario";
 import Supermercado from "./components/Supermercado/Supermercado"; // <-- IMPORTA EL NUEVO JUEGO
 import DashboardWelcome from "./components/DashboardWelcome";
 import GameFrame from "./components/GameFrame";
+import Reciclaje from "./components/Reciclaje/Reciclaje"; // <-- 1. IMPORTAR EL NUEVO COMPONENTE
 
 function App() {
   useEffect(() => {
@@ -72,9 +73,21 @@ function App() {
             </GameFrame>
           }
         />
+
+        {/* <-- 2. AÑADIR LA NUEVA RUTA DEL JUEGO --> */}
+        <Route
+          path="reciclaje"
+          element={
+            <GameFrame title="Misión Reciclaje">
+              <Reciclaje />
+            </GameFrame>
+          }
+        />
+
       </Route>
     </Routes>
   );
 }
 
 export default App;
+
