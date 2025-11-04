@@ -96,12 +96,10 @@ function gameReducer(state, action) {
 export const useHuertoState = (juegoIniciado) => {
   const [estado, dispatch] = useReducer(gameReducer, initialState);
   const [playCrecimiento] = useSound("/sonido-crecimiento.mp3", { volume: 0.5 });
-  const shakeDataRef = useRef();
+
+  // Corrección: Inicializar shakeDataRef correctamente
+  const shakeDataRef = useRef({ history: [], lastApplied: 0 });
   const isCurrentlySaving = useRef(false);
-  const lastUpdateRef = useRef({
-    agua: 0,
-    sol: 0
-  });
 
   useEffect(() => {
     if (juegoIniciado) {
@@ -158,7 +156,7 @@ export const useHuertoState = (juegoIniciado) => {
           isCurrentlySaving.current = false;
         }, GAME_CONFIG.SAVING_INDICATOR_DELAY_MS);
       }
-    }, 1500);
+    }, 1500); // 1.5 segundos de inactividad antes de guardar
 
     return () => clearTimeout(handler);
   }, [
@@ -217,50 +215,61 @@ export const useHuertoState = (juegoIniciado) => {
   ]);
 
   const acciones = {
+    // Corrección: Lógica de 'soltar' implementada para usar el valor de gameConfig
     soltarHerramienta: useCallback((resourceId) => {
       if (resourceId !== "agua" && resourceId !== "sol") return;
-
-      const now = Date.now();
-      if (now - (lastUpdateRef.current[resourceId] || 0) < 300) return;
-      lastUpdateRef.current[resourceId] = now;
-
-      const current = estado[resourceId] ?? 0;
-      const missing = GAME_CONFIG.MAX_RESOURCE_LEVEL - current;
-      if (missing <= 0) return;
-
-      // Incremento moderado al soltar
-      const incremento = Math.min(8, Math.ceil(missing / 12));
-
       dispatch({
         type: "APPLY_RESOURCE",
-        payload: { resourceId, amount: incremento },
+        payload: {
+          resourceId,
+          amount: GAME_CONFIG.RESOURCE_INCREASE_ON_DROP,
+        },
       });
-    }, [estado]),
+      // Limpiar el historial de shake al soltar
+      shakeDataRef.current.history = [];
+    }, []),
 
-    agitarHerramienta: useCallback((resourceId) => {
+    // Corrección: Lógica de 'agitar' (shake) implementada
+    agitarHerramienta: useCallback((resourceId, delta) => {
       if (resourceId !== "agua" && resourceId !== "sol") return;
 
       const now = Date.now();
-      if (now - (lastUpdateRef.current[resourceId] || 0) < 200) return;
-      lastUpdateRef.current[resourceId] = now;
+      const shakeConfig = GAME_CONFIG.SHAKE_DETECTION;
+      const shakeHistory = shakeDataRef.current.history;
 
-      const current = estado[resourceId] ?? 0;
-      const missing = GAME_CONFIG.MAX_RESOURCE_LEVEL - current;
-      if (missing <= 0) return;
+      // 1. Limpiar historial viejo
+      while (
+        shakeHistory.length > 0 &&
+        shakeHistory[0].timestamp < now - shakeConfig.TIME_MS
+      ) {
+        shakeHistory.shift();
+      }
 
-      // Incremento más significativo al agitar
-      const incremento = Math.min(
-        15, // Incremento máximo por agitación
-        Math.ceil(missing / 8) // 1/8 de lo que falta
-      );
+      // 2. Añadir nuevo movimiento
+      const distance = Math.sqrt(delta.x * delta.x + delta.y * delta.y);
+      if (distance > shakeConfig.DISTANCE_PX) {
+        shakeHistory.push({ timestamp: now, distance });
+      }
 
-      dispatch({
-        type: "APPLY_RESOURCE",
-        payload: { resourceId, amount: incremento },
-      });
+      // 3. Comprobar si es un "shake" y si ha pasado el cooldown
+      if (
+        shakeHistory.length >= shakeConfig.COUNT &&
+        now - shakeDataRef.current.lastApplied > shakeConfig.TIME_MS
+      ) {
+        // ¡Shake detectado!
+        shakeDataRef.current.lastApplied = now;
+        shakeDataRef.current.history = []; // Limpiar historial después de aplicar
 
-      shakeDataRef.current = { timestamp: now, resource: resourceId };
-    }, [estado]),
+        dispatch({
+          type: "APPLY_RESOURCE",
+          payload: {
+            resourceId,
+            amount: GAME_CONFIG.RESOURCE_INCREASE_ON_SHAKE,
+          },
+        });
+      }
+    }, []),
+
 
     handleRespuesta: useCallback((esCorrecta) => {
       dispatch({ type: "ANSWER_QUESTION", payload: { esCorrecta } });

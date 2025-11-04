@@ -1,4 +1,5 @@
-// frontend/src/components/Reciclaje/hooks/useReciclaje.js
+// javascript
+// file: `frontend/src/components/Reciclaje/hooks/useReciclaje.js`
 import { useReducer, useEffect, useCallback, useRef } from 'react';
 import {
   trashData,
@@ -11,7 +12,8 @@ import {
   FEVER_MODE_STREAK_TARGET,
   FEVER_MODE_DURATION,
   FEVER_MODE_SPAWN_INTERVAL
-} from '../constants.js'; // <-- CORREGIDO: ../constants.js
+} from '../constants.js';
+
 import {
   initReciclajeAudio,
   playSound,
@@ -19,11 +21,12 @@ import {
   pauseMusic,
   resumeMusic,
   stopBackgroundMusic
-} from '../soundService.js'; // <-- CORREGIDO: ../soundService.js
-import { getHighScore, saveHighScore } from '../reciclajeService.js'; // <-- CORREGIDO: ../../../services/reciclajeService.js
+} from '../soundService.js';
+
+import { getHighScore, saveHighScore } from '../reciclajeService.js';
 
 const initialState = {
-  gameState: 'welcome', // 'welcome', 'playing', 'paused', 'gameOver'
+  gameState: 'welcome',
   score: 0,
   highScore: 0,
   lives: INITIAL_LIVES,
@@ -32,10 +35,10 @@ const initialState = {
   currentItem: null,
   timerSpeed: 100,
   itemTimeDuration: 10000,
-  itemTimerFill: 100, // % de la barra de tiempo
+  itemTimerFill: 100,
   isDoublePointsActive: false,
   isFeverModeActive: false,
-  powerUpTimeLeft: 0, // % de la barra de powerup
+  powerUpTimeLeft: 0,
   isMuted: false,
   botMessage: '¡A reciclar!',
   botExpression: 'normal',
@@ -44,21 +47,21 @@ const initialState = {
     powerUpsCollected: 0,
     bombsAvoided: 0,
   },
-  screenFlash: false, // Para el efecto de subir de nivel
+  screenFlash: false,
 };
 
 function gameReducer(state, action) {
+  const payload = action.payload ?? {};
   switch (action.type) {
     case 'START_GAME':
       return {
         ...initialState,
         gameState: 'playing',
-        highScore: state.highScore, // Mantener el highscore cargado
+        highScore: state.highScore,
         isMuted: state.isMuted,
         botMessage: '¡Empieza la misión!',
       };
     case 'GAME_OVER':
-      stopBackgroundMusic();
       return {
         ...state,
         gameState: 'gameOver',
@@ -69,65 +72,71 @@ function gameReducer(state, action) {
         isDoublePointsActive: false,
       };
     case 'PAUSE':
-      pauseMusic();
       return {
         ...state,
         gameState: 'paused',
         botExpression: 'paused',
       };
     case 'RESUME':
-      resumeMusic();
       return {
         ...state,
         gameState: 'playing',
         botExpression: 'normal',
       };
     case 'SET_HIGH_SCORE':
-      return { ...state, highScore: action.payload };
+      return { ...state, highScore: payload };
     case 'SPAWN_ITEM':
       return {
         ...state,
-        currentItem: action.payload,
+        currentItem: payload,
         itemTimerFill: 100,
       };
-    case 'ITEM_TIMER_TICK':
-      const newFill = state.itemTimerFill - (100 / (state.itemTimeDuration / state.timerSpeed));
+    case 'ITEM_TIMER_TICK': {
+      const decrement = 100 / (state.itemTimeDuration / state.timerSpeed);
+      const newFill = state.itemTimerFill - decrement;
       return {
         ...state,
         itemTimerFill: Math.max(0, newFill),
       };
-    case 'POWERUP_TIMER_TICK':
-      const newPowerUpTime = state.powerUpTimeLeft - (100 / (POWERUP_DURATION / 100)); // 100ms interval
+    }
+    case 'POWERUP_TIMER_TICK': {
+      const decrement = 100 * (100 / POWERUP_DURATION);
+      const newPowerUpTime = state.powerUpTimeLeft - decrement;
       return {
         ...state,
         powerUpTimeLeft: Math.max(0, newPowerUpTime),
       };
-    case 'HANDLE_CORRECT':
+    }
+    case 'HANDLE_CORRECT': {
+      const pts = payload.points ?? 0;
       return {
         ...state,
-        score: state.score + action.payload.points,
+        score: state.score + pts,
         currentStreak: state.currentStreak + 1,
         currentItem: null,
-        botMessage: action.payload.message,
+        botMessage: payload.message ?? '',
         botExpression: 'happy',
         gameStats: {
           ...state.gameStats,
           itemsCorrect: state.gameStats.itemsCorrect + 1,
         },
       };
-    case 'HANDLE_WRONG':
+    }
+    case 'HANDLE_WRONG': {
       return {
         ...state,
         lives: state.lives - 1,
         currentStreak: 0,
         currentItem: null,
-        botMessage: action.payload.message,
+        botMessage: payload.message ?? '¡Error!',
         botExpression: 'sad',
       };
-    case 'HANDLE_BOMB_AVOIDED':
+    }
+    case 'HANDLE_BOMB_AVOIDED': {
+      const pts = payload.points ?? 0;
       return {
         ...state,
-        score: state.score + action.payload.points,
+        score: state.score + pts,
         currentItem: null,
         botMessage: '¡Bomba evitada!',
         botExpression: 'happy',
@@ -136,26 +145,31 @@ function gameReducer(state, action) {
           bombsAvoided: state.gameStats.bombsAvoided + 1,
         },
       };
-    case 'LEVEL_UP':
+    }
+    case 'LEVEL_UP': {
+      const { name, speed, duration } = payload ?? {};
       return {
         ...state,
         currentLevel: state.currentLevel + 1,
-        timerSpeed: action.payload.speed,
-        itemTimeDuration: action.payload.duration,
-        botMessage: `¡${action.payload.name} alcanzado!`,
+        timerSpeed: speed ?? state.timerSpeed,
+        itemTimeDuration: duration ?? state.itemTimeDuration,
+        botMessage: `¡${name ?? 'Nivel'} alcanzado!`,
         screenFlash: true,
       };
+    }
     case 'FLASH_OFF':
       return { ...state, screenFlash: false };
     case 'SET_BOT_MESSAGE':
-      return { ...state, botMessage: action.payload };
+      return { ...state, botMessage: payload ?? '' };
+    case 'SET_BOT_EXPRESSION':
+      return { ...state, botExpression: payload ?? 'normal' };
     case 'TOGGLE_MUTE':
-      return { ...state, isMuted: action.payload }; // Recibe el nuevo estado
-    case 'ACTIVATE_POWERUP':
-      const { subType } = action.payload;
+      return { ...state, isMuted: payload }; // expects boolean
+    case 'ACTIVATE_POWERUP': {
+      const { subType } = payload;
       return {
         ...state,
-        lives: subType === 'life' ? Math.min(state.lives + 1, 3) : state.lives,
+        lives: subType === 'life' ? Math.min(state.lives + 1, INITIAL_LIVES) : state.lives,
         timerSpeed: subType === 'slowmo' ? state.timerSpeed * 2 : state.timerSpeed,
         isDoublePointsActive: subType === 'doublePoints' ? true : state.isDoublePointsActive,
         powerUpTimeLeft: subType !== 'life' ? 100 : state.powerUpTimeLeft,
@@ -165,22 +179,24 @@ function gameReducer(state, action) {
         },
         currentItem: null,
       };
-    case 'DEACTIVATE_POWERUP':
-      // Resetea a la velocidad del nivel ACTUAL (si no, usa la base)
-      const currentLevelSpeed = state.currentLevel > 1 ? levels[state.currentLevel - 2].speed : 100;
+    }
+    case 'DEACTIVATE_POWERUP': {
+      const idx = Math.max(0, state.currentLevel - 2);
+      const currentLevelSpeed = (levels && levels[idx] && levels[idx].speed) ? levels[idx].speed : 100;
       return {
         ...state,
         timerSpeed: currentLevelSpeed,
         isDoublePointsActive: false,
         powerUpTimeLeft: 0,
       };
+    }
     case 'START_FEVER_MODE':
       return {
         ...state,
         isFeverModeActive: true,
-        currentStreak: 0, // Reinicia la racha para la próxima
+        currentStreak: 0,
         botMessage: '¡MODO RACHA!',
-        powerUpTimeLeft: 100, // Usa la barra para la duración del modo fiebre
+        powerUpTimeLeft: 100,
       };
     case 'END_FEVER_MODE':
       return {
@@ -188,7 +204,7 @@ function gameReducer(state, action) {
         isFeverModeActive: false,
         botMessage: '¡Racha terminada!',
         powerUpTimeLeft: 0,
-        currentItem: null, // Limpia el último item de la fiebre
+        currentItem: null,
       };
     default:
       return state;
@@ -208,9 +224,9 @@ export const useReciclaje = () => {
     isDoublePointsActive,
     itemTimerFill,
     powerUpTimeLeft,
+    timerSpeed,
   } = state;
 
-  // Refs para todos los temporizadores
   const itemTimerRef = useRef(null);
   const powerUpTimerRef = useRef(null);
   const feverSpawnRef = useRef(null);
@@ -218,19 +234,25 @@ export const useReciclaje = () => {
   const botMessageRef = useRef(null);
   const botExpressionRef = useRef(null);
 
-  // --- SERVICIO DE API ---
+  // Ref for drag-and-drop current dragging item
+  const draggingItemRef = useRef(null);
+
   useEffect(() => {
+    let mounted = true;
     const loadScore = async () => {
       try {
         const data = await getHighScore();
-        dispatch({ type: 'SET_HIGH_SCORE', payload: data.highScore || 0 });
+        if (!mounted) return;
+        dispatch({ type: 'SET_HIGH_SCORE', payload: data.highScore ?? 0 });
       } catch (e) {
         console.error("No se pudo cargar el high score", e);
         const savedScore = localStorage.getItem('recycleHighScore') || 0;
+        if (!mounted) return;
         dispatch({ type: 'SET_HIGH_SCORE', payload: parseInt(savedScore, 10) });
       }
     };
     loadScore();
+    return () => { mounted = false; };
   }, []);
 
   const handleGameOver = useCallback(() => {
@@ -243,26 +265,24 @@ export const useReciclaje = () => {
     dispatch({ type: 'GAME_OVER' });
   }, [score, highScore]);
 
-
-  // --- MANEJO DE MENSAJES DEL BOT ---
   const setBotMessage = useCallback((message, duration = 2000) => {
-    clearTimeout(botMessageRef.current);
+    if (botMessageRef.current) clearTimeout(botMessageRef.current);
     dispatch({ type: 'SET_BOT_MESSAGE', payload: message });
     botMessageRef.current = setTimeout(() => {
       dispatch({ type: 'SET_BOT_MESSAGE', payload: '' });
+      botMessageRef.current = null;
     }, duration);
   }, []);
 
   const setBotExpression = useCallback((expression, duration = 1500) => {
-    clearTimeout(botExpressionRef.current);
+    if (botExpressionRef.current) clearTimeout(botExpressionRef.current);
     dispatch({ type: 'SET_BOT_EXPRESSION', payload: expression });
     botExpressionRef.current = setTimeout(() => {
       dispatch({ type: 'SET_BOT_EXPRESSION', payload: 'normal' });
+      botExpressionRef.current = null;
     }, duration);
   }, []);
 
-
-  // --- LÓGICA DE SPAWN ---
   const spawnNewTrash = useCallback(() => {
     const chance = Math.random();
     let item;
@@ -274,101 +294,133 @@ export const useReciclaje = () => {
       else item = trashData[Math.floor(Math.random() * trashData.length)];
     }
 
-    if (item.type === 'powerup') playSound('powerup-spawn');
-    if (item.type === 'danger') playSound('bomb-spawn');
+    if (item?.type === 'powerup') playSound('powerup-spawn');
+    if (item?.type === 'danger') playSound('bomb-spawn');
 
     dispatch({ type: 'SPAWN_ITEM', payload: item });
   }, [isFeverModeActive]);
 
+  useEffect(() => {
+    if (gameState === 'paused') {
+      pauseMusic();
+    } else if (gameState === 'playing') {
+      resumeMusic();
+    } else if (gameState === 'gameOver') {
+      stopBackgroundMusic();
+    }
+  }, [gameState]);
 
-  // --- TEMPORIZADORES PRINCIPALES ---
   useEffect(() => {
     if (gameState === 'playing' && !isFeverModeActive) {
-      // Temporizador de item
+      if (itemTimerRef.current) clearInterval(itemTimerRef.current);
       itemTimerRef.current = setInterval(() => {
         dispatch({ type: 'ITEM_TIMER_TICK' });
-      }, state.timerSpeed);
+      }, timerSpeed);
+    } else {
+      if (itemTimerRef.current) {
+        clearInterval(itemTimerRef.current);
+        itemTimerRef.current = null;
+      }
     }
-    return () => clearInterval(itemTimerRef.current);
-  }, [gameState, state.timerSpeed, isFeverModeActive]);
+    return () => {
+      if (itemTimerRef.current) {
+        clearInterval(itemTimerRef.current);
+        itemTimerRef.current = null;
+      }
+    };
+  }, [gameState, timerSpeed, isFeverModeActive]);
 
   useEffect(() => {
-    if (gameState === 'playing' && itemTimerFill <= 0) {
-      // Se acabó el tiempo
+    if (gameState !== 'playing') return;
+
+    if (itemTimerFill <= 0) {
       if (state.currentItem?.type === 'danger') {
         const points = isDoublePointsActive ? 50 : 25;
         dispatch({ type: 'HANDLE_BOMB_AVOIDED', payload: { points } });
         playSound('correct');
       } else {
-        dispatch({ type: 'HANDLE_WRONG', message: '¡Se escapó!' });
+        dispatch({ type: 'HANDLE_WRONG', payload: { message: '¡Se escapó!' } });
         playSound('error');
         setBotExpression('sad', 2000);
       }
     }
-  }, [itemTimerFill, gameState, state.currentItem, isDoublePointsActive, setBotExpression]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [itemTimerFill, gameState, isDoublePointsActive]);
 
-  // Temporizador de Power-Up / Modo Fiebre
   useEffect(() => {
-    if (gameState === 'playing' && (powerUpTimeLeft > 0)) {
+    if (gameState === 'playing' && powerUpTimeLeft > 0) {
+      if (powerUpTimerRef.current) clearInterval(powerUpTimerRef.current);
       powerUpTimerRef.current = setInterval(() => {
         dispatch({ type: 'POWERUP_TIMER_TICK' });
-      }, 100); // Intervalo más rápido para la barra
+      }, 100);
+    } else {
+      if (powerUpTimerRef.current) {
+        clearInterval(powerUpTimerRef.current);
+        powerUpTimerRef.current = null;
+      }
     }
-    return () => clearInterval(powerUpTimerRef.current);
+    return () => {
+      if (powerUpTimerRef.current) {
+        clearInterval(powerUpTimerRef.current);
+        powerUpTimerRef.current = null;
+      }
+    };
   }, [gameState, powerUpTimeLeft]);
 
-  // Efecto para desactivar power-ups
   useEffect(() => {
-    if (powerUpTimeLeft <= 0 && (isDoublePointsActive || state.timerSpeed > 100)) { // 100 es la velocidad base
-      if (!isFeverModeActive) { // No desactivar si es por modo fiebre
+    if (powerUpTimeLeft <= 0 && (isDoublePointsActive || timerSpeed > 100)) {
+      if (!isFeverModeActive) {
         dispatch({ type: 'DEACTIVATE_POWERUP' });
         setBotMessage('¡Poder terminado!', 2000);
       }
     }
-  }, [powerUpTimeLeft, isDoublePointsActive, state.timerSpeed, currentLevel, isFeverModeActive, setBotMessage]);
+  }, [powerUpTimeLeft, isDoublePointsActive, timerSpeed, isFeverModeActive, setBotMessage]);
 
-
-  // --- INICIO Y FIN MODO FIEBRE ---
   const startFeverMode = useCallback(() => {
     dispatch({ type: 'START_FEVER_MODE' });
-    playSound('levelUp'); // Sonido especial
+    playSound('levelUp');
 
-    // Limpia timers de item
-    clearInterval(itemTimerRef.current);
+    if (itemTimerRef.current) {
+      clearInterval(itemTimerRef.current);
+      itemTimerRef.current = null;
+    }
 
-    // Inicia spawns rápidos
+    if (feverSpawnRef.current) clearInterval(feverSpawnRef.current);
     feverSpawnRef.current = setInterval(() => {
-      // Lógica de spawn y puntos en modo fiebre
       playSound('correct');
       const points = isDoublePointsActive ? 10 : 5;
       dispatch({ type: 'HANDLE_CORRECT', payload: { points, message: '¡FIEBRE!' } });
-
-      // Spawnear el siguiente item un poco después
-      setTimeout(spawnNewTrash, 300); // 300ms para animacion de caida
+      setTimeout(spawnNewTrash, 300);
     }, FEVER_MODE_SPAWN_INTERVAL);
 
-    // Temporizador para terminar el modo fiebre
+    if (feverDurationRef.current) clearTimeout(feverDurationRef.current);
     feverDurationRef.current = setTimeout(() => {
-      clearInterval(feverSpawnRef.current);
+      if (feverSpawnRef.current) {
+        clearInterval(feverSpawnRef.current);
+        feverSpawnRef.current = null;
+      }
       dispatch({ type: 'END_FEVER_MODE' });
-      spawnNewTrash(); // Spawnea un item normal
+      spawnNewTrash();
     }, FEVER_MODE_DURATION);
   }, [isDoublePointsActive, spawnNewTrash]);
 
-  // --- LÓGICA DE DROP ---
   const handleDrop = useCallback((item, bin) => {
+    if (!item || !bin) {
+      console.error("handleDrop fue llamado con argumentos inválidos:", item, bin);
+      return;
+    }
     if (gameState !== 'playing' || !item) return;
 
-    clearInterval(itemTimerRef.current); // Detiene el timer del item
+    if (itemTimerRef.current) {
+      clearInterval(itemTimerRef.current);
+      itemTimerRef.current = null;
+    }
 
-    // 1. Soltar Bomba
     if (item.type === 'danger') {
-      dispatch({ type: 'HANDLE_WRONG', message: '¡BOOM! ¡Era una bomba!' });
+      dispatch({ type: 'HANDLE_WRONG', payload: { message: '¡BOOM! ¡Era una bomba!' } });
       playSound('bomb-explode');
       setBotExpression('sad', 2000);
-    }
-    // 2. Acierto
-    else if (item.type === bin.id) {
+    } else if (item.type === bin.id) {
       const points = isDoublePointsActive ? 20 : 10;
       const streakBonus = isDoublePointsActive ? (currentStreak * 5 * 2) : (currentStreak * 5);
       const totalPoints = points + streakBonus;
@@ -384,64 +436,63 @@ export const useReciclaje = () => {
       }
 
       dispatch({ type: 'HANDLE_CORRECT', payload: { points: totalPoints, message: `+${totalPoints}` } });
-    }
-    // 3. Power-up
-    else if (item.type === 'powerup') {
+    } else if (item.type === 'powerup') {
       const points = isDoublePointsActive ? 10 : 5;
-      dispatch({ type: 'HANDLE_CORRECT', payload: { points, message: `+${points}` } }); // Da puntos por recolectar
+      dispatch({ type: 'HANDLE_CORRECT', payload: { points, message: `+${points}` } });
       dispatch({ type: 'ACTIVATE_POWERUP', payload: item });
       setBotMessage(`¡${item.name} activado!`, 2000);
       setBotExpression('happy', 1500);
-    }
-    // 4. Error
-    else {
-      dispatch({ type: 'HANDLE_WRONG', message: '¡Contenedor incorrecto!' });
+    } else {
+      dispatch({ type: 'HANDLE_WRONG', payload: { message: '¡Contenedor incorrecto!' } });
       playSound('error');
       setBotExpression('sad', 2000);
     }
   }, [gameState, isDoublePointsActive, currentStreak, setBotExpression, setBotMessage]);
 
-  // --- EFECTO POST-DROP (Revisar Vidas, Nivel, Racha) ---
   useEffect(() => {
     if (state.currentItem === null && gameState === 'playing') {
-      // 1. Revisar si perdiste
       if (lives <= 0) {
         handleGameOver();
         return;
       }
 
-      // 2. Revisar si sube de nivel
-      const nextLevelData = levels[currentLevel - 1];
+      const nextLevelData = levels && levels[currentLevel - 1];
       if (nextLevelData && score >= nextLevelData.score) {
         dispatch({ type: 'LEVEL_UP', payload: nextLevelData });
         playSound('levelUp');
         setTimeout(() => dispatch({ type: 'FLASH_OFF' }), 500);
       }
 
-      // 3. Revisar si activa modo fiebre
       if (currentStreak >= FEVER_MODE_STREAK_TARGET && !isFeverModeActive) {
         startFeverMode();
-      }
-      // 4. Si no está en modo fiebre, spawnear siguiente item
-      else if (!isFeverModeActive) {
-        // Pausa breve antes de spawnear
+      } else if (!isFeverModeActive) {
         setTimeout(spawnNewTrash, 300);
       }
     }
-  }, [state.currentItem, gameState, lives, score, currentLevel, currentStreak, isFeverModeActive, handleGameOver, spawnNewTrash, startFeverMode]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.currentItem, gameState, lives, score, currentLevel, currentStreak, isFeverModeActive]);
 
-
-  // --- FUNCIONES DE CONTROL ---
   const startGame = useCallback(() => {
-    // Limpia cualquier timer viejo
-    clearInterval(itemTimerRef.current);
-    clearInterval(powerUpTimerRef.current);
-    clearInterval(feverSpawnRef.current);
-    clearTimeout(feverDurationRef.current);
+    if (itemTimerRef.current) {
+      clearInterval(itemTimerRef.current);
+      itemTimerRef.current = null;
+    }
+    if (powerUpTimerRef.current) {
+      clearInterval(powerUpTimerRef.current);
+      powerUpTimerRef.current = null;
+    }
+    if (feverSpawnRef.current) {
+      clearInterval(feverSpawnRef.current);
+      feverSpawnRef.current = null;
+    }
+    if (feverDurationRef.current) {
+      clearTimeout(feverDurationRef.current);
+      feverDurationRef.current = null;
+    }
 
     initReciclajeAudio();
     dispatch({ type: 'START_GAME' });
-    spawnNewTrash(); // Spawnea el primer item
+    spawnNewTrash();
   }, [spawnNewTrash]);
 
   const togglePause = useCallback(() => {
@@ -454,5 +505,56 @@ export const useReciclaje = () => {
     dispatch({ type: 'TOGGLE_MUTE', payload: muted });
   }, []);
 
-  return { state, dispatch, startGame, togglePause, toggleMute, handleDrop };
+  // Drag-and-drop helpers to use from the component
+  const onDragStart = useCallback((e, item) => {
+    // Prefer storing object in ref; dataTransfer used only as fallback for external tooling
+    draggingItemRef.current = item;
+    try {
+      e?.dataTransfer?.setData('text/plain', item?.id ?? '');
+    } catch (err) {
+      // ignore for complex objects
+    }
+  }, []);
+
+  const onDragEnd = useCallback(() => {
+    draggingItemRef.current = null;
+  }, []);
+
+  const onBinDragOver = useCallback((e) => {
+    if (e && typeof e.preventDefault === 'function') e.preventDefault();
+  }, []);
+
+  const onBinDrop = useCallback((e, bin) => {
+    if (e && typeof e.preventDefault === 'function') e.preventDefault();
+    const item = draggingItemRef.current;
+    handleDrop(item, bin);
+    draggingItemRef.current = null;
+  }, [handleDrop]);
+
+  const getDraggingItem = useCallback(() => draggingItemRef.current, []);
+
+  useEffect(() => {
+    return () => {
+      if (itemTimerRef.current) clearInterval(itemTimerRef.current);
+      if (powerUpTimerRef.current) clearInterval(powerUpTimerRef.current);
+      if (feverSpawnRef.current) clearInterval(feverSpawnRef.current);
+      if (feverDurationRef.current) clearTimeout(feverDurationRef.current);
+      if (botMessageRef.current) clearTimeout(botMessageRef.current);
+      if (botExpressionRef.current) clearTimeout(botExpressionRef.current);
+    };
+  }, []);
+
+  return {
+    state,
+    dispatch,
+    startGame,
+    togglePause,
+    toggleMute,
+    handleDrop,
+    onDragStart,
+    onDragEnd,
+    onBinDragOver,
+    onBinDrop,
+    getDraggingItem,
+  };
 };

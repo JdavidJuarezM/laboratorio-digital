@@ -1,4 +1,6 @@
 {
+  "name": "laboratorio-digital-monorepo",
+  "version": "1.0.0",
   "dependencies": {
     "@pixi/react": "^8.0.2",
     "framer-motion": "^12.23.9",

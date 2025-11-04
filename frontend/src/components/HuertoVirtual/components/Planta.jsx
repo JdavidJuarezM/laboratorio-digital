@@ -2,7 +2,7 @@
 
 import React, { memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import PropTypes from "prop-types";
+import PropTypes from "prop-types"; // <-- IMPORTACIÓN AÑADIDA
 
 // --- CONFIGURACIÓN ---
 const configEtapas = {

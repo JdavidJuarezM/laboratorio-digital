@@ -5,6 +5,7 @@ import { DndContext } from '@dnd-kit/core';
 import { useReciclaje } from './hooks/useReciclaje.js';
 import { binData } from './constants.js';
 import { initReciclajeAudio, playSound } from './soundService.js';
+// La importación de 'reciclajeService' se eliminó porque no se usa aquí.
 
 // Importar todos los sub-componentes con .jsx
 import Bote from './Bote.jsx';

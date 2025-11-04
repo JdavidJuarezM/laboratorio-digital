@@ -1,6 +1,6 @@
 // frontend/src/components/Reciclaje/reciclajeService.js
 
-import apiClient from "../../services//api.js";
+import apiClient from "../../services/apiClient.js"; // Corrección: Estandarizado a apiClient.js y ruta corregida
 
 /**
  * Obtiene el high score de reciclaje del usuario autenticado.
