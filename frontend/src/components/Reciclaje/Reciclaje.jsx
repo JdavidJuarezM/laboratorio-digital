@@ -1,37 +1,42 @@
 // frontend/src/components/Reciclaje/Reciclaje.jsx
-import React, { useEffect } from 'react';
-import { DndContext } from '@dnd-kit/core';
-// Corrección: Añadidas extensiones .js y .jsx a todas las importaciones
+import React, { useEffect, useState } from 'react';
 import { useReciclaje } from './hooks/useReciclaje.js';
 import { binData } from './constants.js';
 import { initReciclajeAudio, playSound } from './soundService.js';
-// La importación de 'reciclajeService' se eliminó porque no se usa aquí.
-
-// Importar todos los sub-componentes con .jsx
+import { DndContext, DragOverlay } from '@dnd-kit/core';
+import Basura, { BasuraVisual } from './Basura.jsx';
 import Bote from './Bote.jsx';
-import Basura from './Basura.jsx';
+import WelcomeModal from './WelcomeModal.jsx';
 import Paisaje from './Paisaje.jsx';
 import ScoreDisplay from './ScoreDisplay.jsx';
-import WelcomeModal from './WelcomeModal.jsx';
 import GameOverModal from './GameOverModal.jsx';
 import PauseModal from './PauseModal.jsx';
 import EcoBot from './EcoBot.jsx';
-
-// Importa el CSS para las animaciones
 import './Reciclaje.css';
 
 const Reciclaje = () => {
   const { state, dispatch, startGame, togglePause, toggleMute, handleDrop } = useReciclaje();
+  const [activeItem, setActiveItem] = useState(null);
 
   // Inicializar el audio al montar el componente
   useEffect(() => {
     initReciclajeAudio();
   }, []);
 
+
+
+function handleDragStart(event) {
+  dispatch({ type: 'SET_DRAGGING', payload: true });
+  setActiveItem(event.active.data.current); // <-- AÑADE ESTO
+}
+
+
+
   // Manejador para el DndContext
   function handleDragEnd(event) {
+    dispatch({ type: 'SET_DRAGGING', payload: false });
+    setActiveItem(null);
     const { active, over } = event;
-
     if (over && active) {
       // 'active.data.current' tiene el objeto 'item' que pasamos en Basura.jsx
       const item = active.data.current;
@@ -42,26 +47,12 @@ const Reciclaje = () => {
       if (bin) {
         handleDrop(item, bin);
       }
-    } else {
-      // El drop no fue sobre un bote (lo contamos como "miss")
-      if (state.gameState === 'playing' && state.currentItem) {
-        // Solo resta vida si había un item y no está en modo fiebre
-        if (state.currentItem.type !== 'danger' && !state.isFeverModeActive) {
-          dispatch({ type: 'HANDLE_WRONG', message: '¡Se te cayó!' });
-          playSound('error');
-        } else if (state.currentItem.type === 'danger' && !state.isFeverModeActive) {
-          // Si una bomba toca el suelo (no se suelta en un bote), la evitas
-          const points = state.isDoublePointsActive ? 50 : 25;
-          dispatch({ type: 'HANDLE_BOMB_AVOIDED', payload: { points } });
-          playSound('correct');
-        }
-      }
     }
   }
 
   // --- Renderizado ---
   return (
-    <DndContext onDragEnd={handleDragEnd}>
+    <DndContext onDragEnd={handleDragEnd} onDragStart={handleDragStart}>
       <div
         id="gameContainer"
         className={`w-full h-full relative overflow-hidden ${state.isFeverModeActive ? 'fever-mode' : ''} ${state.gameState === 'playing' ? `level-${state.currentLevel}` : 'level-1'}`}
@@ -85,7 +76,7 @@ const Reciclaje = () => {
 
         <EcoBot message={state.botMessage} expression={state.botExpression} />
 
-        <div className="w-full max-w-5xl mx-auto z-10 relative p-4">
+       <div className="w-full max-w-5xl mx-auto z-40 relative p-4">
           <ScoreDisplay
             score={state.score}
             highScore={state.highScore}
@@ -108,7 +99,7 @@ const Reciclaje = () => {
             <div className="conveyor-roller left"></div>
             <div className="conveyor-roller right"></div>
 
-            <div id="trashSpawn" className="z-20">
+            <div id="trashSpawn" className="relative">
               {/* Renderizar la basura actual si existe */}
               {state.currentItem && <Basura item={state.currentItem} />}
             </div>
@@ -135,8 +126,10 @@ const Reciclaje = () => {
           </div>
         </div>
       </div>
+        <DragOverlay>
+      {activeItem ? <BasuraVisual item={activeItem} isDragging={true} /> : null}
+    </DragOverlay>
     </DndContext>
   );
 };
-
 export default Reciclaje;

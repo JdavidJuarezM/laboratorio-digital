@@ -25,24 +25,23 @@ const AnimatedBackground = () => {
 
 function DashboardPage() {
   const location = useLocation();
-  // Comprueba si la ruta actual es una ruta de juego (ej. /dashboard/huerto)
   const isGameView = location.pathname !== "/dashboard";
+  const dashboardStyle = {
+    background:
+      "linear-gradient(135deg, #a855f7, #6366f1, #3b82f6, #60a5fa)",
+    backgroundSize: "400% 400%",
+    animation: "gradientBG 15s ease infinite",
+  };
 
+  const gameStyle = {};
   return (
     <div
-      // --- CAMBIO AQUÍ: Se quita el padding si es una vista de juego ---
       className={`min-h-screen relative ${
         isGameView ? "" : "flex items-center justify-center p-4"
       }`}
-      style={{
-        background:
-          "linear-gradient(135deg, #a855f7, #6366f1, #3b82f6, #60a5fa)",
-        backgroundSize: "400% 400%",
-        animation: "gradientBG 15s ease infinite",
-      }}
+      style={isGameView ? gameStyle : dashboardStyle}
     >
-      <AnimatedBackground />
-      {/* --- CAMBIO AQUÍ: Se quitan las restricciones de tamaño si es una vista de juego --- */}
+      {!isGameView && <AnimatedBackground />}
       <div
         className={`relative z-10 w-full ${
           isGameView ? "h-screen" : "max-w-5xl"

@@ -2,7 +2,7 @@
 import React from 'react';
 import { useDroppable } from '@dnd-kit/core';
 
-const Bote = ({ id, label, icon, color }) => {
+const Bote = ({ id, label, Icono, color }) => {
   const { isOver, setNodeRef } = useDroppable({
     id: id,
   });
@@ -25,10 +25,9 @@ const Bote = ({ id, label, icon, color }) => {
     <div ref={setNodeRef} id={id} data-bin={id} className={binClasses}>
       <div className="pt-4">
         {/* El icono y el texto están envueltos */}
-        <div
-          className="text-5xl bin-icon"
-          dangerouslySetInnerHTML={{ __html: icon }}
-        />
+        <div className="h-14 w-14 bin-icon">
+          {Icono && <Icono className="w-full h-full" />}
+        </div>
         <div className="text-sm md:text-lg font-bold text-center mt-2">
           {label}
         </div>

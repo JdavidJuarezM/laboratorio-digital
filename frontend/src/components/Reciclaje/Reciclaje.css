@@ -231,8 +231,9 @@ body.level-5 #stars {
 /* Estilo para la basura que se arrastra */
 .dragging {
   opacity: 0.6;
-  transform: scale(1.1) rotate(5deg) !important;
+  transform: scale(1.1) rotate(5deg); /* <-- Sin !important */
   box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+  transition: none;
 }
 
 /* Estilo para los contenedores */
@@ -402,14 +403,15 @@ body.level-5 #stars {
 #currentItem {
   border: 3px solid rgba(0,0,0,0.1);
   box-shadow: 0 8px 18px rgba(0,0,0,0.35);
-  transition: all 0.2s ease-out;
-  cursor: grab;
+  transition: box-shadow 0.2s ease-out, opacity 0.2s ease-out;
   transform-style: preserve-3d;
   backface-visibility: hidden;
   background: linear-gradient(to bottom, #ffffff 0%, #f0f0f0 100%);
   animation: idleBob 1.8s ease-in-out infinite, spawnIn 0.3s ease-out;
   position: relative;
   z-index: 2;
+  touch-action: none;
+  user-select: none;
 }
 @keyframes spawnIn {
   from { opacity: 0; transform: scale(0.5); }
@@ -468,8 +470,7 @@ body.level-5 #stars {
 }
 
 #currentItem:active {
-  cursor: grabbing;
-  transform: scale(1.15) rotateX(15deg) rotateZ(var(--random-rotation, 0deg)) translateY(-10px) !important;
+  transform: scale(1.15) rotateX(15deg) rotateZ(var(--random-rotation, 0deg)) translateY(-10px);
   animation: none;
 }
 

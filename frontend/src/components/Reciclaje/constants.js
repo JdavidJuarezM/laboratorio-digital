@@ -1,14 +1,22 @@
 // frontend/src/components/Reciclaje/constants.js
-
+import {
+  IconoPlastico,
+  IconoPapel,
+  IconoVidrio,
+  IconoPeligroso,
+  IconoOrganico,
+  IconoVarios
+} from './BoteIconos.jsx';
 // Tipos de contenedores
 export const binData = [
-  { id: 'plastic', label: 'Plásticos y Latas', color: 'bg-yellow-400', icon: '&#128290;' },
-  { id: 'paper', label: 'Papeles y Cartones', color: 'bg-blue-500', icon: '&#128196;' },
-  { id: 'glass', label: 'Vidrio', color: 'bg-green-600', icon: '&#127867;' },
-  { id: 'hazardous', label: 'Residuos Peligrosos', color: 'bg-red-600', icon: '&#128128;' },
-  { id: 'organic', label: 'Orgánicos', color: 'bg-orange-500', icon: '&#127820;' },
-  { id: 'various', label: 'Varios', color: 'bg-gray-500', icon: '&#128465;' }
+  { id: 'plastic', label: 'Plásticos y Latas', color: 'bg-yellow-400', Icono: IconoPlastico },
+  { id: 'paper', label: 'Papeles y Cartones', color: 'bg-blue-500', Icono: IconoPapel },
+  { id: 'glass', label: 'Vidrio', color: 'bg-green-600', Icono: IconoVidrio },
+  { id: 'hazardous', label: 'Residuos Peligrosos', color: 'bg-red-600', Icono: IconoPeligroso },
+  { id: 'organic', label: 'Orgánicos', color: 'bg-orange-500', Icono: IconoOrganico },
+  { id: 'various', label: 'Varios', color: 'bg-gray-500', Icono: IconoVarios }
 ];
+
 
 // SVGs de la basura
 export const trashData = [

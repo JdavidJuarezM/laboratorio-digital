@@ -48,6 +48,7 @@ const initialState = {
     bombsAvoided: 0,
   },
   screenFlash: false,
+  isDragging: false,
 };
 
 function gameReducer(state, action) {
@@ -161,6 +162,10 @@ function gameReducer(state, action) {
       return { ...state, screenFlash: false };
     case 'SET_BOT_MESSAGE':
       return { ...state, botMessage: payload ?? '' };
+
+    case 'SET_DRAGGING':
+      return { ...state, isDragging: payload };
+
     case 'SET_BOT_EXPRESSION':
       return { ...state, botExpression: payload ?? 'normal' };
     case 'TOGGLE_MUTE':
@@ -311,7 +316,7 @@ export const useReciclaje = () => {
   }, [gameState]);
 
   useEffect(() => {
-    if (gameState === 'playing' && !isFeverModeActive) {
+    if (gameState === 'playing' && !isFeverModeActive && !state.isDragging) {
       if (itemTimerRef.current) clearInterval(itemTimerRef.current);
       itemTimerRef.current = setInterval(() => {
         dispatch({ type: 'ITEM_TIMER_TICK' });
@@ -328,7 +333,7 @@ export const useReciclaje = () => {
         itemTimerRef.current = null;
       }
     };
-  }, [gameState, timerSpeed, isFeverModeActive]);
+  }, [gameState, timerSpeed, isFeverModeActive, state.isDragging]);
 
   useEffect(() => {
     if (gameState !== 'playing') return;

@@ -3,6 +3,7 @@ package com.laboratoriodigital.backend.controllers;
 import com.laboratoriodigital.backend.controllers.dto.RegisterRequest;
 import com.laboratoriodigital.backend.repositories.MaestroRepository;
 import com.laboratoriodigital.backend.services.AuthService;
+import com.laboratoriodigital.backend.services.MaestroService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,6 +24,9 @@ import com.laboratoriodigital.backend.models.Maestro; // Importa tu modelo Maest
 @RestController
 @RequestMapping("/api/maestros")
 public class AuthController {
+
+    @Autowired
+    private MaestroService maestroService;
 
     @Autowired
     private AuthService authService;
@@ -74,8 +78,8 @@ public class AuthController {
         String email = userDetails.getUsername();
 
         try {
-            Maestro maestro = maestroRepository.findByEmail(email)
-                    .orElseThrow(() -> new Exception("Mestro no encontrado en BD"));
+            Maestro maestro = maestroService.findMaestroByEmail(email);
+                  //  .orElseThrow(() -> new Exception("Mestro no encontrado en BD"));
 
             Map<String, Object> perfilResponse = new HashMap<>();
             perfilResponse.put("id", maestro.getId());
@@ -88,8 +92,4 @@ public class AuthController {
             return new ResponseEntity<>(Map.of("message", "Error al buscar el perfil"), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
-
-    @Autowired
-    private MaestroRepository maestroRepository;
-
 }
