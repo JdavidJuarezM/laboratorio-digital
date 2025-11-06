@@ -3,26 +3,19 @@
 /* Fuente personalizada para un look amigable */
 @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap');
 :root {
-  --random-rotation: 0deg; /* default; can be overridden from JS per item */
+  --random-rotation: 0deg;
 }
 
-/* Optional: also scope a default to the item */
+
 #currentItem {
   --random-rotation: 0deg;
 }
 body {
-  /*
-  NOTA: Estos estilos de 'body' del archivo original serán ignorados
-  porque el 'body' de la app de React se controla desde 'index.css'
-  y 'DashboardPage.jsx'. Los dejaremos aquí por referencia,
-  pero moveremos los estilos útiles a clases específicas del juego.
-  */
   font-family: 'Fredoka', sans-serif;
   --color-sky-top: #87CEEB;
   --color-sky-mid: #B0E0E6;
   --color-sky-bottom: #ADD8E6;
   background: linear-gradient(to bottom, var(--color-sky-top) 0%, var(--color-sky-mid) 50%, var(--color-sky-bottom) 100%);
-  overflow: hidden;
   position: relative;
   min-height: 100vh;
   transition: background 1.5s ease-in-out;
