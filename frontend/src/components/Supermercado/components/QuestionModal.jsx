@@ -39,10 +39,10 @@ const QuestionModal = ({ questionData, onSubmit, onClose }) => {
         }`}
       >
         <div className="flex items-center justify-center gap-3 mb-4">
-          <div
-            className="flex items-center justify-center w-8 h-8"
-            dangerouslySetInnerHTML={{ __html: ICONS[questionData.type] || "" }}
-          />
+          {/* MODIFICADO: Renderiza el emoji como texto */}
+          <div className="flex items-center justify-center w-8 h-8 text-2xl">
+            {ICONS[questionData.type] || ""}
+          </div>
           <h2 className="text-2xl font-bold text-gray-800">
             ¡Desafío Matemático!
           </h2>

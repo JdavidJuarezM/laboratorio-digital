@@ -47,7 +47,8 @@ const Herramienta = memo(
         {...attributes}
         className={containerClasses}
       >
-        <i className={`fa-solid ${toolInfo.icon} ${toolInfo.color} text-3xl`} />
+        {/* MODIFICADO: Renderiza el emoji como texto */}
+        <span className={`text-3xl ${toolInfo.color}`}>{toolInfo.icon}</span>
         <span className="text-sm capitalize">{toolInfo.name}</span>
       </div>
     );

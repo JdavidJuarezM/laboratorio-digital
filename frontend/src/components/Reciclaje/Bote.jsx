@@ -20,16 +20,10 @@ const Bote = ({ id, label, icon, color }) => {
     isOver ? 'bin-drag-over' : ''
   ].join(' ');
 
-
-  let iconNode = null;
-  if (React.isValidElement(icon)) {
-    iconNode = icon;
-  } else if (typeof icon === 'function') {
-    const Icon = icon;
-    iconNode = <Icon width={48} height={48} />;
-  } else if (typeof icon === 'string') {
-    iconNode = <span className="text-3xl">{icon}</span>;
-  }
+  // MODIFICADO: El icono ahora es un string (emoji)
+  let iconNode = (
+    <span className="text-5xl">{icon}</span>
+  );
 
   return (
     <div ref={setNodeRef} id={id} data-bin={id} className={binClasses}>

@@ -178,12 +178,7 @@ body {
 .icon-container img,
 .icon-container svg {
   display: block;
-  width: 2rem;   /* adjust size as needed (32px) */
-  height: 2rem;
+  width: 4rem;   /* adjust size as needed (32px) */
+  height: 4rem;
   margin: 0 auto;
-}
-
-/* hide the visible name when icon present */
-.has-icon .item-name {
-  display: none !important;
 }

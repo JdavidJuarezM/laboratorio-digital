@@ -29,12 +29,12 @@ export const nombresEtapas = [
 export const TOOL_TYPES = {
   agua: {
     name: "Agua",
-    icon: "fa-droplet",
+    icon: "💧", // Cambiado de 'fa-droplet'
     color: "text-blue-400",
   },
   sol: {
     name: "Sol",
-    icon: "fa-sun",
+    icon: "☀️", // Cambiado de 'fa-sun'
     color: "text-yellow-400",
   },
 };

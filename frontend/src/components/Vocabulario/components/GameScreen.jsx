@@ -165,28 +165,36 @@ const GameScreen = ({
           disabled={isListening}
           className="button bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 sm:py-3 sm:px-5 rounded-full shadow-lg flex items-center justify-center flex-grow sm:flex-grow-0 transition-transform transform hover:scale-105 text-sm sm:text-base"
         >
-          <i className="fas fa-volume-up mr-2"></i>
+          <span className="mr-2" role="img" aria-label="Escuchar">
+            🔊
+          </span>
           {isListening ? "..." : "Escuchar"}
         </button>
         <button
           onClick={() => handleHint(letterTray)}
           className="button bg-yellow-400 hover:bg-yellow-500 text-white font-bold py-2 px-4 sm:py-3 sm:px-5 rounded-full shadow-lg flex items-center justify-center flex-grow sm:flex-grow-0 transition-transform transform hover:scale-105 text-sm sm:text-base"
         >
-          <i className="fas fa-lightbulb mr-2"></i>
+          <span className="mr-2" role="img" aria-label="Pista">
+            💡
+          </span>
           Pista (-5)
         </button>
         <button
           onClick={handleBackspace}
           className="button bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 sm:py-3 sm:px-5 rounded-full shadow-lg flex items-center justify-center flex-grow sm:flex-grow-0 transition-transform transform hover:scale-105 text-sm sm:text-base"
         >
-          <i className="fas fa-backspace mr-2"></i>
+          <span className="mr-2" role="img" aria-label="Borrar">
+            ⌫
+          </span>
           Borrar
         </button>
         <button
           onClick={handleSkip}
           className="button bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 sm:py-3 sm:px-5 rounded-full shadow-lg flex items-center justify-center flex-grow sm:flex-grow-0 transition-transform transform hover:scale-105 text-sm sm:text-base"
         >
-          <i className="fas fa-forward mr-2"></i>
+          <span className="mr-2" role="img" aria-label="Saltar">
+            ⏭️
+          </span>
           Saltar
         </button>
       </div>

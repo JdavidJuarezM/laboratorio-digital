@@ -1,7 +1,7 @@
 import React from "react";
 
 function InputWithIcon({
-  icon,
+  icon, // Ahora esperamos un emoji string
   type,
   name,
   placeholder,
@@ -11,9 +11,13 @@ function InputWithIcon({
 }) {
   return (
     <div className="relative">
-      <i
-        className={`fa-solid ${icon} absolute left-4 top-1/2 -translate-y-1/2 text-gray-400`}
-      ></i>
+      {/* MODIFICADO: Renderiza el emoji como texto */}
+      <span
+        className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
+        style={{ fontSize: "1.1rem" }} // Aseguramos un tamaño consistente
+      >
+        {icon}
+      </span>
       <input
         type={type}
         name={name}

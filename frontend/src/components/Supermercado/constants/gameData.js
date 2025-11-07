@@ -56,9 +56,9 @@ export const DIFFICULTY_SETTINGS = {
 };
 
 export const ICONS = {
-  addition: `<svg class="h-8 w-8 text-green-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>`,
-  subtraction: `<svg class="h-8 w-8 text-red-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line></svg>`,
-  multiplication: `<svg class="h-8 w-8 text-blue-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`,
-  division: `<div class="h-8 w-8 text-purple-500 flex flex-col items-center justify-center"><span class="h-2 w-2 bg-current rounded-full"></span><div class="h-1 w-6 bg-current my-1 rounded"></div><span class="h-2 w-2 bg-current rounded-full"></span></div>`,
-  percentage: `<svg class="h-8 w-8 text-yellow-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="5" x2="5" y2="19"></line><circle cx="6.5" cy="6.5" r="2.5"></circle><circle cx="17.5" cy="17.5" r="2.5"></circle></svg>`,
+  addition: "➕",
+  subtraction: "➖",
+  multiplication: "✖️",
+  division: "➗",
+  percentage: "٪",
 };

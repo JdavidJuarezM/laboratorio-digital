@@ -6,18 +6,15 @@ import { useDraggable } from '@dnd-kit/core';
 export const BasuraVisual = forwardRef(({ item, isDragging, ...props }, ref) => {
   const randomRotation = useMemo(() => Math.floor(Math.random() * 20) - 10, [item]);
 
-  // Determine iconElement:
-  // - prefer item.icon (string URL or React element)
-  // - if no item.icon but item.svg is a React element, treat it as the icon
+  // MODIFICADO: El icono ahora viene de item.icon (renombrado de item.svg en constants.js)
+  // y es un emoji.
   let iconElement = null;
   if (item?.icon) {
-    iconElement = typeof item.icon === 'string'
-      ? <img src={item.icon} alt={item?.name || ''} className="mx-auto h-8 w-8" />
-      : React.isValidElement(item.icon)
-        ? item.icon
-        : null;
-  } else if (item?.svg && React.isValidElement(item.svg)) {
-    iconElement = item.svg;
+    iconElement = (
+      <span className="text-6xl" role="img" aria-label={item?.name || ''}>
+        {item.icon}
+      </span>
+    );
   }
 
   const hasIcon = !!iconElement;
@@ -33,13 +30,6 @@ export const BasuraVisual = forwardRef(({ item, isDragging, ...props }, ref) => 
     isDragging ? 'dragging' : ''
   ].join(' ').trim();
 
-  // Fallback for svg string content (only used when there's no icon)
-  let svgElement = null;
-  if (!hasIcon && item?.svg) {
-    if (typeof item.svg === 'string' && item.svg.trim().startsWith('<svg')) {
-      svgElement = <div className="trash-svg-container" dangerouslySetInnerHTML={{ __html: item.svg }} />;
-    }
-  }
 
   return (
     <div
@@ -54,12 +44,14 @@ export const BasuraVisual = forwardRef(({ item, isDragging, ...props }, ref) => 
           <div className="icon-container" aria-hidden={false}>
             {iconElement}
           </div>
-          <span className="sr-only">{item?.name}</span>
+          <div className="text-center font-medium text-gray-800 text-lg mt-1 item-name">
+              {item?.name}
+          </div>
         </>
       ) : (
         <>
-          {svgElement}
-          <div className="text-center font-medium text-gray-800 mt-2 item-name">
+          {/* Fallback por si algo no tiene icono */}
+          <div className="text-center font-medium text-gray-800 text-lg mt-1 item-name">
             {item?.name}
           </div>
         </>
@@ -95,4 +87,3 @@ const Basura = ({ item }) => {
 };
 
 export default Basura;
-

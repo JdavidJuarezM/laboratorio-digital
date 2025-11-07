@@ -1,23 +1,11 @@
 // client/src/components/HuertoVirtual/components/HuertoBienvenida.jsx
 
+// client/src/components/HuertoVirtual/components/HuertoBienvenida.jsx
+
 import React from "react";
 import PropTypes from "prop-types";
 
-// Icono para el botón de inicio
-const PlayIcon = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    className="h-8 w-8"
-    viewBox="0 0 20 20"
-    fill="currentColor"
-  >
-    <path
-      fillRule="evenodd"
-      d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z"
-      clipRule="evenodd"
-    />
-  </svg>
-);
+// Icono para el botón de inicio (ELIMINADO)
 
 function HuertoBienvenida({ onStart }) {
   return (
@@ -56,7 +44,10 @@ function HuertoBienvenida({ onStart }) {
         onClick={onStart}
         className="start-button bg-green-500 text-white font-bold py-4 px-8 rounded-full shadow-lg hover:bg-green-600 transition-transform transform hover:scale-105 duration-300 text-2xl flex items-center gap-3"
       >
-        <PlayIcon />
+        {/* MODIFICADO: Emoji en lugar de SVG */}
+        <span className="text-2xl" role="img" aria-label="Play">
+          ▶️
+        </span>
         Iniciar Juego
       </button>
     </div>
