@@ -1,32 +1,41 @@
 // frontend/src/components/Reciclaje/Bote.jsx
+// javascript
+// file: `frontend/src/components/Reciclaje/Bote.jsx`
 import React from 'react';
 import { useDroppable } from '@dnd-kit/core';
 
-const Bote = ({ id, label, Icono, color }) => {
-  const { isOver, setNodeRef } = useDroppable({
-    id: id,
-  });
+const Bote = ({ id, label, icon, color }) => {
+  const { isOver, setNodeRef } = useDroppable({ id });
 
-  // Clases dinámicas para el bote
   const binClasses = [
     'bin',
     color,
-    'p-4',
+    'p-5',
     'rounded-xl',
     'flex',
     'flex-col',
     'items-center',
     'justify-center',
     'text-white',
-    isOver ? 'bin-drag-over' : '' // Clase para la tapa abierta
+    isOver ? 'bin-drag-over' : ''
   ].join(' ');
+
+
+  let iconNode = null;
+  if (React.isValidElement(icon)) {
+    iconNode = icon;
+  } else if (typeof icon === 'function') {
+    const Icon = icon;
+    iconNode = <Icon width={48} height={48} />;
+  } else if (typeof icon === 'string') {
+    iconNode = <span className="text-3xl">{icon}</span>;
+  }
 
   return (
     <div ref={setNodeRef} id={id} data-bin={id} className={binClasses}>
       <div className="pt-4">
-        {/* El icono y el texto están envueltos */}
-        <div className="h-14 w-14 bin-icon">
-          {Icono && <Icono className="w-full h-full" />}
+        <div className="text-5xl bin-icon">
+          {iconNode}
         </div>
         <div className="text-sm md:text-lg font-bold text-center mt-2">
           {label}
@@ -36,5 +45,4 @@ const Bote = ({ id, label, Icono, color }) => {
   );
 };
 
-// Usamos React.memo para optimizar, ya que los botes no cambian
 export default React.memo(Bote);

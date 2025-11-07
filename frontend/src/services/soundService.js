@@ -60,4 +60,24 @@ const soundService = {
   },
 };
 
+const synth = new Tone.MembraneSynth().toDestination();
+
+export function levelUp() {
+  // use a slight offset to guarantee strictly increasing start times
+  const now = Tone.now();
+  const startTime = now + 0.001;
+  try {
+    synth.triggerAttackRelease('C3', '8n', startTime);
+  } catch (e) {
+    console.error('play error', e);
+  }
+}
+
+// or when calling trigger from playSound:
+export function playSound(note, duration = '8n') {
+  const start = Tone.now() + 0.001;
+  synth.triggerAttackRelease(note, duration, start);
+}
+
+
 export default soundService;

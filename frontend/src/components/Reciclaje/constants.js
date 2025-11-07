@@ -1,26 +1,23 @@
 // frontend/src/components/Reciclaje/constants.js
 import {
-  IconoPlastico,
-  IconoPapel,
-  IconoVidrio,
-  IconoPeligroso,
-  IconoOrganico,
-  IconoVarios
+    IconoReciclaje,
+    BotelladePlastico
 } from './BoteIconos.jsx';
+
 // Tipos de contenedores
 export const binData = [
-  { id: 'plastic', label: 'Plásticos y Latas', color: 'bg-yellow-400', Icono: IconoPlastico },
-  { id: 'paper', label: 'Papeles y Cartones', color: 'bg-blue-500', Icono: IconoPapel },
-  { id: 'glass', label: 'Vidrio', color: 'bg-green-600', Icono: IconoVidrio },
-  { id: 'hazardous', label: 'Residuos Peligrosos', color: 'bg-red-600', Icono: IconoPeligroso },
-  { id: 'organic', label: 'Orgánicos', color: 'bg-orange-500', Icono: IconoOrganico },
-  { id: 'various', label: 'Varios', color: 'bg-gray-500', Icono: IconoVarios }
+  { id: 'plastic', label: 'Plásticos y Latas', color: 'bg-yellow-400', icon: IconoReciclaje },
+  { id: 'paper', label: 'Papeles y Cartones', icon: IconoReciclaje, color: 'bg-blue-500' },
+  { id: 'glass', label: 'Vidrio', color: 'bg-green-600', icon: IconoReciclaje },
+  { id: 'hazardous', label: 'Residuos Peligrosos', color: 'bg-red-600', icon: IconoReciclaje },
+  { id: 'organic', label: 'Orgánicos', color: 'bg-orange-500', icon: IconoReciclaje },
+  { id: 'various', label: 'Varios', color: 'bg-gray-500', icon: IconoReciclaje }
 ];
 
 
 // SVGs de la basura
 export const trashData = [
-  { name: 'Botella de Plástico', type: 'plastic', svg: `<svg viewBox='0 0 24 24'><defs><linearGradient id='grad-plastic' x1='0%' y1='0%' x2='100%' y2='0%'><stop offset='0%' style='stop-color:#60a5fa;stop-opacity:1' /><stop offset='50%' style='stop-color:#3b82f6;stop-opacity:1' /><stop offset='100%' style='stop-color:#60a5fa;stop-opacity:1' /></linearGradient></defs><path fill='#9ca3af' d='M14.5 2H9.5L9 4H15L14.5 2Z' /><path fill='url(#grad-plastic)' d='M15 4H9L7 7V22H17V7L15 4Z' /><path fill='rgba(255,255,255,0.5)' d='M10 9H11V19H10z' /></svg>` },
+  { name: 'Botella de Plástico', type: 'plastic', svg: BotelladePlastico },
   { name: 'Lata de Refresco', type: 'plastic', svg: `<svg viewBox='0 0 24 24'><defs><linearGradient id='grad-metal' x1='0%' y1='0%' x2='100%' y2='0%'><stop offset='0%' style='stop-color:#d1d5db;stop-opacity:1' /><stop offset='50%' style='stop-color:#9ca3af;stop-opacity:1' /><stop offset='100%' style='stop-color:#d1d5db;stop-opacity:1' /></linearGradient></defs><path fill='url(#grad-metal)' d='M5 3H19V4H5V3M19 21H5V6H19V21M7 8H17V19H7V8Z' /><path fill='#ef4444' d='M7 9H17V18H7V9Z' /><path fill='rgba(255,255,255,0.7)' d='M8 10H10V17H8V10Z' /></svg>` },
   { name: 'Bolsa de Plástico', type: 'plastic', svg: `<svg viewBox='0 0 24 24'><defs><linearGradient id='grad-bag' x1='0%' y1='0%' x2='0%' y2='100%'><stop offset='0%' style='stop-color:#f3f4f6;stop-opacity:1' /><stop offset='100%' style='stop-color:#d1d5db;stop-opacity:1' /></linearGradient></defs><path fill='url(#grad-bag)' d='M16 5H14.4C14.4 3.9 14 3 13.2 2.2C12.4 1.4 11.4 1 10.3 1C9.2 1 8.2 1.4 7.4 2.2C6.6 3 6.2 3.9 6.2 5H4C3.4 5 3 5.4 3 6V20C3 20.6 3.4 21 4 21H18C18.6 21 19 20.6 19 20V6C19 5.4 18.6 5 16 5M10.3 3C10.7 3 11.1 3.1 11.4 3.4C11.7 3.7 11.8 4.1 11.8 4.5H8.8C8.8 4.1 8.9 3.7 9.2 3.4C9.5 3.1 9.9 3 10.3 3M17 19H5V7H6.2V9H8.2V7H14.4V9H16.4V7H17V19Z' /></svg>` },
   { name: 'Envase de Yogur', type: 'plastic', svg: `<svg viewBox='0 0 24 24'><defs><linearGradient id='grad-yogurt' x1='0%' y1='0%' x2='0%' y2='100%'><stop offset='0%' style='stop-color:#f1f5f9;stop-opacity:1' /><stop offset='100%' style='stop-color:#e2e8f0;stop-opacity:1' /></linearGradient></defs><path fill='url(#grad-yogurt)' d='M18,2H6C4.9,2 4,2.9 4,4V20C4,21.1 4.9,22 6,22H18C19.1,22 20,21.1 20,20V4C20,2.9 19.1,2 18,2M6,4H18V6H6V4M18,20H6V8H18V20Z' /><path fill='#3b82f6' d='M8 10H16V12H8z' /></svg>` },

@@ -13,6 +13,7 @@ import GameOverModal from './GameOverModal.jsx';
 import PauseModal from './PauseModal.jsx';
 import EcoBot from './EcoBot.jsx';
 import './Reciclaje.css';
+import { IconoReciclaje } from './BoteIconos';
 
 const Reciclaje = () => {
   const { state, dispatch, startGame, togglePause, toggleMute, handleDrop } = useReciclaje();
