@@ -4,8 +4,11 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        // Añadimos 'Fredoka' como la fuente principal de la app
-        sans: ["Fredoka", "sans-serif"],
+        // 'Nunito' será la fuente por defecto para el cuerpo
+        sans: ['Nunito', 'system-ui', 'sans-serif'],
+
+        // 'Fredoka' será la fuente para los títulos
+        heading: ['Fredoka', 'sans-serif'],
       },
     },
   },

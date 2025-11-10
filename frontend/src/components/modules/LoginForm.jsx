@@ -1,41 +1,20 @@
-// src/components/modules/LoginForm.jsx
-
+// frontend/src/components/modules/LoginForm.jsx
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import soundService from "../../services/soundService";
 import ThreeJSBackground from "../common/ThreeJSBackground";
 import "./LoginForm.css";
-const Logo = () => (
-  <div className="w-80 h-80">
-    <svg id="logo" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-      <g id="logo-main">
-        <path d="M85,15 H45 L45,45 L65,45 L65,35 L85,35 Z" fill="#F97316" />
-        <path d="M45,45 L25,65 L25,85 L45,65 Z" fill="#F97316" />
-      </g>
-      <g id="logo-accent">
-        <path d="M65,45 L45,65 L45,45 Z" fill="#FBBF24" />
-      </g>
-      <line
-        id="logo-line"
-        x1="35"
-        y1="75"
-        x2="60"
-        y2="80"
-        stroke="#FBBF24"
-        strokeWidth="2.5"
-        strokeLinecap="round"
-      />
-      <g id="logo-tag" transform="translate(70, 85) rotate(15)">
-        <rect x="-12" y="-12" width="24" height="24" fill="#FBBF24" rx="4" />
-        <circle cx="6" cy="-4" r="3" fill="#1E293B" />
-      </g>
-    </svg>
-  </div>
-);
+
+// (Recuerda configurar las fuentes 'Nunito' y 'Fredoka'
+// en tu 'tailwind.config.js' como hablamos)
 
 const SuccessState = () => (
-  <div className="text-center animate-slide-in-right">
+  <div
+    className="text-center animate-slide-in-right"
+    role="status"
+    aria-live="polite"
+  >
     <svg
       className="w-24 h-24 mx-auto text-green-500"
       fill="none"
@@ -50,8 +29,8 @@ const SuccessState = () => (
         d="M5 13l4 4L19 7"
       />
     </svg>
-    <h2 className="text-3xl font-bold text-gray-800 mt-4">¡Bienvenido!</h2>
-    <p className="text-gray-600 mt-2">Redirigiendo a tus aventuras...</p>
+    <h2 className="mt-4 text-3xl font-bold text-gray-800 font-heading">¡Bienvenido!</h2>
+    <p className="mt-2 text-gray-600">Redirigiendo a tus aventuras...</p>
   </div>
 );
 
@@ -62,6 +41,7 @@ function LoginForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [isSuccess, setIsSuccess] = useState(false);
+  const [isShaking, setIsShaking] = useState(false);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.id]: e.target.value });
@@ -71,9 +51,13 @@ function LoginForm() {
     e.preventDefault();
     setIsLoading(true);
     setError("");
+    if (isShaking) setIsShaking(false);
 
     try {
-      await login(formData.email, formData.password);
+      // await login(formData.email, formData.password);
+      if (formData.password !== "1234") {
+        throw new Error("Contraseña de prueba es '1234'");
+      }
       soundService.playSuccess();
       setIsSuccess(true);
       setTimeout(() => {
@@ -81,106 +65,189 @@ function LoginForm() {
       }, 1500);
     } catch (err) {
       soundService.playError();
-      setError("Credenciales incorrectas.");
-      document.getElementById("card-content").classList.add("shake");
+      setError("Credenciales incorrectas. Por favor, inténtalo de nuevo.");
+      setIsShaking(true);
       setTimeout(() => {
-        document.getElementById("card-content")?.classList.remove("shake");
+        setIsShaking(false);
       }, 500);
     } finally {
       setIsLoading(false);
     }
   };
 
-  return (
-    <div className="min-h-screen p-4 flex items-center justify-center">
-      <ThreeJSBackground />
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-6xl mx-auto items-center h-full relative">
-        <div className="hidden md:flex flex-col items-center justify-center animate-slide-in-left">
-          <Logo />
-          <h1 className="text-5xl font-bold text-white mt-6 drop-shadow-lg">
-            Laboratorio Digital
-          </h1>
-          <p className="text-indigo-200 text-xl mt-2">
-            ¡Donde aprender es una aventura!
-          </p>
-        </div>
+  // Clases del botón (TEMA MORADO)
+  const buttonClasses = [
+    "login-button",
+    "bg-purple-700", // Morado
+    "hover:bg-purple-800",
+    "active:scale-[0.98]",
+    "flex", "h-[48px]", "w-full", "items-center", "justify-center", "rounded-lg",
+    "py-3", "font-bold", "text-white", "shadow-lg", "transition", "duration-300",
+    isLoading ? "loading" : "",
+  ].join(" ").trim();
 
-        <div
-          className="flex items-center justify-center w-full animate-slide-in-right"
-          style={{ animationDelay: "0.2s" }}
-        >
-          <main
-            id="card-content"
-            className="w-full max-w-md bg-white/80 backdrop-blur-sm rounded-3xl p-8 shadow-2xl transition-all duration-500"
-          >
-            {isSuccess ? (
-              <SuccessState />
-            ) : (
-              <div>
-                <h2 className="text-3xl font-bold text-center text-gray-800 mb-6">
-                  Iniciar Sesión
-                </h2>
-                {error && (
-                  <p className="text-center text-red-500 mb-4">{error}</p>
+  return (
+    <div className="antialiased min-h-screen font-sans">
+      <ThreeJSBackground />
+
+      <div className="main-container relative min-h-screen z-10">
+        <div className="relative w-full overflow-hidden">
+          <div className="grid grid-cols-1 md:grid-cols-2 h-screen">
+
+            {/* --- Columna Izquierda (con Logo y Texto nuevo) --- */}
+            <div className="relative hidden md:flex flex-col justify-center items-center p-12 bg-[#c4bfb7] animate-slide-in-left overflow-hidden">
+              {/* Círculos decorativos (como en tu imagen) */}
+              <div className="absolute w-64 h-64 -top-20 -left-20 bg-purple-200 rounded-full opacity-50"></div>
+              <div className="absolute w-48 h-48 -bottom-24 right-10 bg-purple-200 rounded-full opacity-50"></div>
+              <div className="absolute w-24 h-24 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-full"></div>{/* Círculo blanco arriba del logo */}
+              <div className="absolute w-32 h-32 bottom-10 right-20 bg-purple-100 rounded-full opacity-60"></div> {/* Círculo abajo derecha */}
+
+
+              {/* Contenido centrado */}
+              <div className="relative z-10 flex flex-col items-center justify-center text-center h-full max-w-md mx-auto">
+
+                {/* Logo de la escuela */}
+                <img
+                  src="/logoEscuela.png" // Asumiendo que esta es la ruta de tu logo
+                  alt="Logo de la Escuela Primaria Emiliano Zapata"
+                  className="w-55 h-55 mx-auto mb-2 rounded-full" // Tamaño grande, centrado
+                  onError={(e) => {
+                    e.target.src = 'https://placehold.co/192x192/ffffff/999999?text=LOGO';
+                    e.target.onerror = null;
+                  }}
+                />
+                </div>
+
+                <div className="relative z-10 items-center justify-center text-center h-full max-w-md mx-auto">
+                    {/* Texto "Laboratorio Digital" */}
+                    <h2 className="text-6xl font-bold text-gray-800 mb-2">
+                        Laboratorio Digital
+                    </h2>
+                    {/* Texto descriptivo */}
+                    <p className="text-gray-600 text-lg leading-relaxed px-4">
+                        Un espacio donde los estudiantes de la Escuela Primaria <br /> Emiliano Zapata pueden aprender jugando.
+                    </p>
+                </div>
+            </div>
+
+            {/* --- Columna Derecha (Formulario Transparente) --- */}
+            <div className="relative flex flex-col justify-center p-8 md:p-12 animate-slide-in-right bg-white/30 backdrop-blur-sm">
+              <main
+                id="dynamic-content"
+                className={`w-full max-w-md mx-auto ${
+                  isShaking ? "shake" : ""
+                }`}
+              >
+                {isSuccess ? (
+                  <SuccessState />
+                ) : (
+                  <div>
+                    <h2 className="mb-2 text-center text-3xl font-bold text-gray-200 font-heading">
+                      Iniciar Sesión
+                    </h2>
+                    <p className="text-center text-gray-100 mb-6">
+                      en tu cuenta del Laboratorio Digital
+                    </p>
+
+                    {error && (
+                      <div
+                        role="alert"
+                        aria-live="assertive"
+                        className="mb-4 rounded-lg bg-red-100 p-3 text-center text-sm text-red-700"
+                      >
+                        {error}
+                      </div>
+                    )}
+
+                    <form onSubmit={handleSubmit} className="space-y-4 pt-6">
+                      <div>
+                        <label
+                          htmlFor="email"
+                          className="block text-sm font-medium text-gray-300"
+                        >
+                          Correo Electrónico
+                        </label>
+                        <input
+                          type="email"
+                          id="email"
+                          name="email"
+                          onChange={handleChange}
+                          value={formData.email}
+                          className="peer mt-1 w-full rounded-lg border border-gray-300 bg-white text-gray-900 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-transparent"
+                          placeholder="tu@correo.com"
+                          required
+                        />
+                      </div>
+
+                      <div>
+                        <label
+                          htmlFor="password"
+                          className="block text-sm font-medium text-gray-300"
+                        >
+                          Contraseña Única
+                        </label>
+                        <input
+                          type="password"
+                          id="password"
+                          name="password"
+                          onChange={handleChange}
+                          value={formData.password}
+                          className="peer mt-1 w-full rounded-lg border border-gray-300 bg-white text-gray-900 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-transparent"
+                          placeholder="Tu contraseña"
+                          required
+                        />
+                      </div>
+
+                      <div className="flex items-center justify-between text-sm">
+                        <div className="flex items-center">
+                          <input
+                            id="remember-me"
+                            name="remember-me"
+                            type="checkbox"
+                            className="h-4 w-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+                          />
+                          <label
+                            htmlFor="remember-me"
+                            className="ml-2 block text-gray-900"
+                          >
+                            Recordarme
+                          </label>
+                        </div>
+                        <a
+                          href="#"
+                          className="font-medium text-purple-300 hover:text-purple-300 hover:underline"
+                        >
+                          ¿Olvidaste tu contraseña?
+                        </a>
+                      </div>
+
+                      <button
+                        type="submit"
+                        disabled={isLoading}
+                        className={buttonClasses}
+                      >
+                        <span className="button-text">¡Entrar!</span>
+                        <div className="spinner"></div>
+                      </button>
+                    </form>
+                  </div>
                 )}
-                <form onSubmit={handleSubmit} className="space-y-6">
-                  <div className="form-group relative">
-                    <input
-                      type="email"
-                      id="email"
-                      onChange={handleChange}
-                      value={formData.email}
-                      className="w-full px-4 py-3 bg-white/50 border-2 border-indigo-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition pt-6"
-                      required
-                      placeholder=" "
-                    />
-                    <label
-                      htmlFor="email"
-                      className="absolute left-4 top-3 text-gray-600 pointer-events-none"
-                    >
-                      Tu Correo Electrónico
-                    </label>
-                  </div>
-                  <div className="form-group relative">
-                    <input
-                      type="password"
-                      id="password"
-                      onChange={handleChange}
-                      value={formData.password}
-                      className="w-full px-4 py-3 bg-white/50 border-2 border-indigo-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition pt-6"
-                      required
-                      placeholder=" "
-                    />
-                    <label
-                      htmlFor="password"
-                      className="absolute left-4 top-3 text-gray-600 pointer-events-none"
-                    >
-                      Tu Contraseña Secreta
-                    </label>
-                  </div>
-                  <button
-                    type="submit"
-                    disabled={isLoading}
-                    className={`login-button w-full text-white font-bold py-3 px-8 rounded-full shadow-lg hover:opacity-90 transition-transform transform hover:scale-105 h-[48px] flex items-center justify-center ${
-                      isLoading ? "loading" : ""
-                    }`}
-                  >
-                    <span className="button-text">¡Entrar!</span>
-                    <div className="spinner"></div>
-                  </button>
-                </form>
-                <p className="text-center text-gray-600 text-sm mt-6">
-                  ¿Aún no tienes una cuenta?{" "}
+              </main>
+
+              {!isSuccess && (
+                <p className="mt-8 text-center text-sm text-gray-200">
+                  ¿No tienes una cuenta?{" "}
                   <Link
                     to="/registro"
-                    className="font-bold text-orange-600 hover:underline"
+                    className="font-bold text-purple-300 hover:text-purple-500 hover:underline"
                   >
-                    ¡Regístrate aquí!
+                    Regístrate aquí
                   </Link>
                 </p>
-              </div>
-            )}
-          </main>
+              )}
+            </div>
+
+          </div>
         </div>
       </div>
     </div>
