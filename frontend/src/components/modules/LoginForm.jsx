@@ -6,8 +6,6 @@ import soundService from "../../services/soundService";
 import ThreeJSBackground from "../common/ThreeJSBackground";
 import "./LoginForm.css";
 
-// (Recuerda configurar las fuentes 'Nunito' y 'Fredoka'
-// en tu 'tailwind.config.js' como hablamos)
 
 const SuccessState = () => (
   <div
@@ -54,10 +52,11 @@ function LoginForm() {
     if (isShaking) setIsShaking(false);
 
     try {
-      // await login(formData.email, formData.password);
-      if (formData.password !== "1234") {
-        throw new Error("Contraseña de prueba es '1234'");
-      }
+
+      await login(formData.email, formData.password);
+
+
+
       soundService.playSuccess();
       setIsSuccess(true);
       setTimeout(() => {
@@ -78,7 +77,7 @@ function LoginForm() {
   // Clases del botón (TEMA MORADO)
   const buttonClasses = [
     "login-button",
-    "bg-purple-700", // Morado
+    "bg-purple-700",
     "hover:bg-purple-800",
     "active:scale-[0.98]",
     "flex", "h-[48px]", "w-full", "items-center", "justify-center", "rounded-lg",
@@ -108,9 +107,9 @@ function LoginForm() {
 
                 {/* Logo de la escuela */}
                 <img
-                  src="/logoEscuela.png" // Asumiendo que esta es la ruta de tu logo
+                  src="/logoEscuela.png"
                   alt="Logo de la Escuela Primaria Emiliano Zapata"
-                  className="w-55 h-55 mx-auto mb-2 rounded-full" // Tamaño grande, centrado
+                  className="w-55 h-55 mx-auto mb-2 rounded-full"
                   onError={(e) => {
                     e.target.src = 'https://placehold.co/192x192/ffffff/999999?text=LOGO';
                     e.target.onerror = null;
