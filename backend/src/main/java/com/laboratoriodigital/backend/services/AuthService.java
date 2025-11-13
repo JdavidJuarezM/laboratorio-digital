@@ -1,4 +1,5 @@
 package com.laboratoriodigital.backend.services;
+
 import org.springframework.security.authentication.BadCredentialsException;
 import com.laboratoriodigital.backend.models.Maestro;
 import com.laboratoriodigital.backend.repositories.MaestroRepository;
@@ -32,11 +33,11 @@ public class AuthService {
         return maestroRepository.save(nuevoMaestro);
     }
 
-    public Maestro autenticarMaestro(String email, String password){
+    public Maestro autenticarMaestro(String email, String password) {
         Maestro maestro = maestroRepository.findByEmail(email)
                 .orElseThrow(() -> new BadCredentialsException("Credenciales invalidas"));
 
-        if(!passwordEncoder.matches(password, maestro.getPasswordHash())){
+        if (!passwordEncoder.matches(password, maestro.getPasswordHash())) {
             throw new BadCredentialsException("Credenciales invalidas");
         }
         return maestro;

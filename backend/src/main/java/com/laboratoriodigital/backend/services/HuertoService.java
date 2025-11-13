@@ -5,7 +5,7 @@ import com.laboratoriodigital.backend.models.Maestro;
 import com.laboratoriodigital.backend.models.ProgresoHuerto;
 import com.laboratoriodigital.backend.repositories.MaestroRepository;
 import com.laboratoriodigital.backend.repositories.ProgresoHuertoRepository;
-import org.springframework.transaction.annotation.Transactional ;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -22,12 +22,10 @@ public class HuertoService {
     private MaestroRepository maestroRepository;
 
 
-
     public Maestro findMaestroByEmail(String email) {
         return maestroRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Maestro no encontrado con email: " + email));
     }
-
 
 
     @Transactional
@@ -36,7 +34,7 @@ public class HuertoService {
                 .orElseThrow(() -> new RuntimeException("Maestro no encontrado con ID: " + maestroId));
         Optional<ProgresoHuerto> progresoOpt = progresoHuertoRepository.findByMaestro(maestro);
 
-        if(progresoOpt.isPresent()){
+        if (progresoOpt.isPresent()) {
             return progresoOpt.get();
         } else {
             ProgresoHuerto nuevoProgreso = new ProgresoHuerto(maestro);
@@ -46,7 +44,7 @@ public class HuertoService {
     }
 
     @Transactional
-    public ProgresoHuerto actualizarEstadoHuerto(Long maestroId, ProgresoHuerto estadoActualizado){
+    public ProgresoHuerto actualizarEstadoHuerto(Long maestroId, ProgresoHuerto estadoActualizado) {
         Maestro maestro = maestroRepository.findById(maestroId)
                 .orElseThrow(() -> new RuntimeException("Maestro no encontrado con ID: " + maestroId));
 

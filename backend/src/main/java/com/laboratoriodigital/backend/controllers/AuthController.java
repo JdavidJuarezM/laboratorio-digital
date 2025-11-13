@@ -17,6 +17,7 @@ import org.springframework.security.authentication.BadCredentialsException;
 
 import java.util.HashMap;
 import java.util.Map;
+
 import org.springframework.security.core.Authentication; // Para obtener info del usuario autenticado
 import org.springframework.security.core.context.SecurityContextHolder; // Para acceder al contexto de seguridad
 import com.laboratoriodigital.backend.models.Maestro; // Importa tu modelo Maestro
@@ -35,42 +36,35 @@ public class AuthController {
     private JwtService jwtService;
 
     @PostMapping("/registro")
-    public ResponseEntity<?> registrarMaestro(@RequestBody RegisterRequest registerRequest){
-        try{
-            authService.registrarMaestro(
-                    registerRequest.getNombre(),
-                    registerRequest.getEmail(),
-                    registerRequest.getPassword()
-            );
+    public ResponseEntity<?> registrarMaestro(@RequestBody RegisterRequest registerRequest) {
+        try {
+            authService.registrarMaestro(registerRequest.getNombre(), registerRequest.getEmail(), registerRequest.getPassword());
             return new ResponseEntity<>(Map.of("message", "Usuario Registado Exitosamente"), HttpStatus.CREATED);
 
-        } catch (Exception e){
+        } catch (Exception e) {
             return new ResponseEntity<>(Map.of("message", e.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> autenticarMaestro(@RequestBody LoginRequest loginRequest){
-        try{
-            Maestro maestroAutenticado = authService.autenticarMaestro(
-                    loginRequest.getEmail(),
-                    loginRequest.getPassword()
-            );
+    public ResponseEntity<?> autenticarMaestro(@RequestBody LoginRequest loginRequest) {
+        try {
+            Maestro maestroAutenticado = authService.autenticarMaestro(loginRequest.getEmail(), loginRequest.getPassword());
             String jwtToken = jwtService.generateToken(maestroAutenticado);
 
-            return  ResponseEntity.ok(new LoginResponse(jwtToken,"Inicio de sesión exitoso" ));
-        } catch (BadCredentialsException e){
+            return ResponseEntity.ok(new LoginResponse(jwtToken, "Inicio de sesión exitoso"));
+        } catch (BadCredentialsException e) {
             return new ResponseEntity<>(Map.of("message", e.getMessage()), HttpStatus.UNAUTHORIZED);
-        } catch (Exception e){
+        } catch (Exception e) {
             return new ResponseEntity<>(Map.of("message", "Error en el servidor"), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
     @GetMapping("/perfil")
-    public ResponseEntity<?> getMaestroPerfil(){
+    public ResponseEntity<?> getMaestroPerfil() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-        if(authentication == null || !authentication.isAuthenticated()|| !(authentication.getPrincipal() instanceof UserDetails)){
+        if (authentication == null || !authentication.isAuthenticated() || !(authentication.getPrincipal() instanceof UserDetails)) {
             return new ResponseEntity<>(Map.of("message", "No autorizado"), HttpStatus.UNAUTHORIZED);
         }
 
@@ -79,7 +73,7 @@ public class AuthController {
 
         try {
             Maestro maestro = maestroService.findMaestroByEmail(email);
-                  //  .orElseThrow(() -> new Exception("Mestro no encontrado en BD"));
+            //  .orElseThrow(() -> new Exception("Mestro no encontrado en BD"));
 
             Map<String, Object> perfilResponse = new HashMap<>();
             perfilResponse.put("id", maestro.getId());
@@ -88,7 +82,7 @@ public class AuthController {
             perfilResponse.put("createdAt", maestro.getCreatedAt());
 
             return ResponseEntity.ok(perfilResponse);
-        }catch (Exception e){
+        } catch (Exception e) {
             return new ResponseEntity<>(Map.of("message", "Error al buscar el perfil"), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }

@@ -9,6 +9,7 @@ import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.security.core.userdetails.UserDetails;
+
 import java.security.Key;
 import java.util.Date;
 import java.util.HashMap;
@@ -27,7 +28,7 @@ public class JwtService {
         return extractClaim(token, Claims::getSubject);
     }
 
-    public <T> T extractClaim(String token, Function<Claims, T> claimsResolver){
+    public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
         final Claims claims = extractAllClaims(token);
         return claimsResolver.apply(claims);
     }
@@ -35,6 +36,7 @@ public class JwtService {
     public String generateToken(Maestro maestroDetails) {
         return generateToken(new HashMap<>(), maestroDetails);
     }
+
     public String generateToken(
             Map<String, Object> extraClaims,
             Maestro maestroDetails
@@ -42,7 +44,7 @@ public class JwtService {
         return buildToken(extraClaims, maestroDetails, jwtExpiration);
     }
 
-    public boolean isTokenValid(String token, UserDetails userDetails){
+    public boolean isTokenValid(String token, UserDetails userDetails) {
         final String username = extractUsername(token);
         return (username.equals(userDetails.getUsername())) && !isTokenExpired(token);
     }
@@ -51,7 +53,7 @@ public class JwtService {
             Map<String, Object> extraClaims,
             Maestro maestroDetails,
             Long expiration
-    ){
+    ) {
         extraClaims.put("userId", maestroDetails.getId());
         extraClaims.put("nombre", maestroDetails.getNombre());
 
@@ -64,15 +66,16 @@ public class JwtService {
                 .signWith(getSignInKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
-    private boolean isTokenExpired(String token){
+
+    private boolean isTokenExpired(String token) {
         return extractExpiration(token).before(new Date());
     }
 
-    private Date extractExpiration(String token){
+    private Date extractExpiration(String token) {
         return extractClaim(token, Claims::getExpiration);
     }
 
-    private Claims extractAllClaims(String token){
+    private Claims extractAllClaims(String token) {
         return Jwts
                 .parserBuilder()
                 .setSigningKey(getSignInKey())
@@ -81,7 +84,7 @@ public class JwtService {
                 .getBody();
     }
 
-    private Key getSignInKey(){
+    private Key getSignInKey() {
 
         byte[] keyBytes = secretKey.getBytes(java.nio.charset.StandardCharsets.UTF_8);
         return Keys.hmacShaKeyFor(keyBytes);

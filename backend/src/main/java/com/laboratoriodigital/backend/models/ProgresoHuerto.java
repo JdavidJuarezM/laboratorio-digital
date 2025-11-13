@@ -26,13 +26,13 @@ public class ProgresoHuerto {
     @Column(nullable = false, columnDefinition = "INT DEFAULT 50")
     private Integer sol = 50;
 
-    @Column(name = "Respuestas_correctas",nullable = false,columnDefinition = "INT DEFAULT 0")
+    @Column(name = "Respuestas_correctas", nullable = false, columnDefinition = "INT DEFAULT 0")
     private Integer respuestasCorrectas = 0;
 
-    @Column (name = "created_at", updatable = false)
+    @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
-    @Column(name= "updated_at")
+    @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
 
@@ -47,7 +47,7 @@ public class ProgresoHuerto {
         updatedAt = LocalDateTime.now();
     }
 
-    public ProgresoHuerto(){
+    public ProgresoHuerto() {
 
     }
 

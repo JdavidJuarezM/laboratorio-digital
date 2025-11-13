@@ -9,7 +9,7 @@ import org.springframework.stereotype.Repository;
 import java.util.Optional;
 
 @Repository
-public interface ProgresoHuertoRepository  extends JpaRepository<ProgresoHuerto, Long> {
+public interface ProgresoHuertoRepository extends JpaRepository<ProgresoHuerto, Long> {
 
     Optional<ProgresoHuerto> findByMaestro(Maestro maestro);
 

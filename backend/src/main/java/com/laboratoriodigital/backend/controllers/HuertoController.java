@@ -41,12 +41,7 @@ public class HuertoController {
             Long maestroId = getCurrentMaestroId();
             ProgresoHuerto progreso = huertoService.getEstadoHuertoDelUsuario(maestroId);
 
-            ProgresoHuertoDTO dto = new ProgresoHuertoDTO(
-                    progreso.getEtapa(),
-                    progreso.getAgua(),
-                    progreso.getSol(),
-                    progreso.getRespuestasCorrectas()
-            );
+            ProgresoHuertoDTO dto = new ProgresoHuertoDTO(progreso.getEtapa(), progreso.getAgua(), progreso.getSol(), progreso.getRespuestasCorrectas());
             return ResponseEntity.ok(dto);
         } catch (RuntimeException e) {
             return ResponseEntity.status(401).build();
@@ -54,7 +49,7 @@ public class HuertoController {
     }
 
     @PostMapping("/actualizar")
-    public ResponseEntity<?> updateHuertoState(@RequestBody ProgresoHuertoDTO estadoActualizadoDTO){
+    public ResponseEntity<?> updateHuertoState(@RequestBody ProgresoHuertoDTO estadoActualizadoDTO) {
         try {
             Long maestroId = getCurrentMaestroId();
 
@@ -66,7 +61,7 @@ public class HuertoController {
 
             huertoService.actualizarEstadoHuerto(maestroId, estadoParaActualizar);
             return ResponseEntity.ok(Map.of("message", "Estado del huerto actualizado correctamente"));
-        } catch (RuntimeException e){
+        } catch (RuntimeException e) {
             return ResponseEntity.status(401).build();
         }
     }

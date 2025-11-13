@@ -19,12 +19,9 @@ public class ReciclajeController {
     private ReciclajeService reciclajeService;
 
     @Autowired
-    private MaestroService maestroService; // Usamos el servicio para obtener el usuario
+    private MaestroService maestroService;
 
-    /**
-     * Endpoint para obtener el high score del usuario autenticado.
-     * @return Un JSON con el high score, ej: { "highScore": 1500 }
-     */
+
     @GetMapping("/highscore")
     public ResponseEntity<HighScoreResponse> getHighScore() {
         try {
@@ -32,17 +29,12 @@ public class ReciclajeController {
             Integer highScore = reciclajeService.getHighScore(maestroId);
             return ResponseEntity.ok(new HighScoreResponse(highScore));
         } catch (RuntimeException e) {
-            // Esto sucede si no se encuentra el usuario (token inválido, etc.)
+
             return ResponseEntity.status(401).build();
         }
     }
 
-    /**
-     * Endpoint para guardar un nuevo score.
-     * El servicio solo lo guardará si es mayor que el high score existente.
-     * @param request El JSON con el score, ej: { "score": 2000 }
-     * @return Un mensaje de éxito.
-     */
+
     @PostMapping("/guardar")
     public ResponseEntity<?> saveHighScore(@RequestBody SaveScoreRequest request) {
         try {
