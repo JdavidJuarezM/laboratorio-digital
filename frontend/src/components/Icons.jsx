@@ -46,3 +46,21 @@ export const ReciclajeIcon = (props) => (
     ♻️
   </span>
 );
+
+export const ResourcesIcon = (props) => (
+  <span {...props} role="img" aria-label="Resources">
+    📚
+  </span>
+);
+
+export const FolderIcon = (props) => (
+  <span {...props} role="img" aria-label="Folder">
+    📁
+  </span>
+);
+
+export const FileIcon = (props) => (
+  <span {...props} role="img" aria-label="File">
+    📄
+  </span>
+);

@@ -6,7 +6,7 @@ node_modules/
 target
 .idea
 .gitignore
-
+.vscode
 
 # Logs
 npm-debug.log*

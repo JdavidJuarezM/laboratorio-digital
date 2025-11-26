@@ -61,7 +61,9 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
+                        // Endpoints públicos (Login, Registro y ahora Archivos)
                         .requestMatchers("/api/maestros/registro", "/api/maestros/login").permitAll()
+                        .requestMatchers("/api/recursos/files/**").permitAll() // <--- ¡ESTA ES LA LÍNEA NUEVA!
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
