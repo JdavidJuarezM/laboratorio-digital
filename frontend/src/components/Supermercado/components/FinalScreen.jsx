@@ -77,11 +77,11 @@ const FinalScreen = ({ score, cart, onEndGame }) => {
     >
       <h2 className="text-3xl font-bold text-blue-800">¡A Pagar!</h2>
       <p className="text-lg mt-4">
-        El total de tu compra es{" "}
+        El total de tu compra es:{" "}
         <span className="font-bold text-green-600">${total.toFixed(2)}</span>.
       </p>
       <p className="text-lg mt-2">
-        Pagas con un billete de{" "}
+        Tu presupuesto total es de:{" "}
         <span className="font-bold">${paymentBill.toFixed(2)}</span>.
       </p>
       <form onSubmit={handleSubmitChange}>
