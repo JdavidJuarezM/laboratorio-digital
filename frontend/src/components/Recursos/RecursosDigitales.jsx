@@ -44,7 +44,10 @@ const RecursosDigitales = () => {
 
   const handleAdminLogin = (e) => {
     e.preventDefault();
-    if (adminPassword === "MAESTRO2025") {
+
+    const adminKey = import.meta.env.VITE_TEACHER_CODE;
+
+    if (adminPassword === adminKey) {
       setIsAdmin(true);
       setShowAdminModal(false);
       setAdminPassword("");

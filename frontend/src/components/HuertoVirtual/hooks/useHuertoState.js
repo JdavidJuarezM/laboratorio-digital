@@ -1,10 +1,8 @@
+// frontend/src/components/HuertoVirtual/hooks/useHuertoState.js
 import {useReducer, useEffect, useCallback, useRef} from "react";
 import useSound from "use-sound";
-import {
-    getEstadoHuerto,
-    guardarEstadoHuerto,
-} from "../../../services/huertoService";
-// Asegúrate de haber agregado WEATHER_TYPES a gameConfig.js como vimos en el paso anterior
+import { getEstadoHuerto } from "../../../services/huertoService"; // Mantenemos para carga genérica si falla
+import { actualizarProgresoAlumno, getAlumnos } from "../../../services/alumnosService"; // NUEVO
 import {GAME_CONFIG, WEATHER_TYPES} from "../../../constants/gameConfig";
 import {bancoDePreguntas} from "../../../constants/bancoDePreguntas";
 
@@ -20,7 +18,6 @@ const initialState = {
     isSaving: false,
     isLoading: true,
     error: null,
-    // --- Estado del Clima ---
     clima: WEATHER_TYPES.SUNNY.id,
     notificacionClima: "",
 };
@@ -34,22 +31,16 @@ function gameReducer(state, action) {
             return {...state, isLoading: false, error: action.payload};
 
         case "GAME_TICK": {
-            // Obtener configuración del clima actual
             const currentWeather = Object.values(WEATHER_TYPES).find(w => w.id === state.clima) || WEATHER_TYPES.SUNNY;
-
             let nuevoNivelAgua = state.agua;
 
-            // Lógica de Clima:
             if (currentWeather.id === 'rainy') {
-                // La lluvia riega la planta automáticamente (+2 por tick)
                 nuevoNivelAgua = Math.min(state.agua + 2, GAME_CONFIG.MAX_RESOURCE_LEVEL);
             } else {
-                // El consumo de agua depende del modificador del clima (Heatwave = 2.5x más rápido)
                 const decrease = GAME_CONFIG.RESOURCE_DECREASE_RATE * currentWeather.waterMod;
                 nuevoNivelAgua = Math.max(state.agua - decrease, 0);
             }
 
-            // El sol disminuye de forma constante
             const nuevoNivelSol = Math.max(state.sol - GAME_CONFIG.RESOURCE_DECREASE_RATE, 0);
 
             return {
@@ -83,30 +74,48 @@ function gameReducer(state, action) {
 
         case "SHOW_QUESTION": {
             if (state.preguntaActual || state.respuestasCorrectas >= 3) return state;
-            const preguntasDisponibles = (bancoDePreguntas[state.etapa] || []).filter(
+
+            // Carga segura de preguntas personalizadas
+            let banco = bancoDePreguntas;
+            const savedQuestions = localStorage.getItem("huerto_preguntas");
+            if (savedQuestions) {
+                try {
+                    const parsed = JSON.parse(savedQuestions);
+                    if (parsed && typeof parsed === 'object') banco = parsed;
+                } catch (e) {
+                    console.error("Error leyendo preguntas locales", e);
+                }
+            }
+
+            const preguntasDisponibles = (banco[state.etapa] || []).filter(
                 (p) => !state.preguntasHechas.includes(p.pregunta)
             );
+
             if (preguntasDisponibles.length > 0) {
-                const pregunta =
-                    preguntasDisponibles[
-                        Math.floor(Math.random() * preguntasDisponibles.length)
-                        ];
+                const pregunta = preguntasDisponibles[Math.floor(Math.random() * preguntasDisponibles.length)];
                 return {
                     ...state,
                     preguntaActual: pregunta,
-                    preguntasHechas: [...state.preguntasHechas, pregunta.pregunta],
                 };
             }
             return state;
         }
 
-        case "ANSWER_QUESTION":
+        case "ANSWER_QUESTION": {
+            const esCorrecta = action.payload.esCorrecta;
+            const nuevasPreguntasHechas = esCorrecta
+                ? [...state.preguntasHechas, state.preguntaActual.pregunta]
+                : state.preguntasHechas;
+
             return {
                 ...state,
                 preguntaActual: null,
-                respuestasCorrectas:
-                    state.respuestasCorrectas + (action.payload.esCorrecta ? 1 : 0),
+                preguntasHechas: nuevasPreguntasHechas,
+                respuestasCorrectas: state.respuestasCorrectas + (esCorrecta ? 1 : 0),
+                agua: state.agua >= 100 ? 90 : state.agua,
+                sol: state.sol >= 100 ? 90 : state.sol,
             };
+        }
 
         case "ADVANCE_STAGE": {
             const nuevaEtapa = state.etapa + 1;
@@ -142,159 +151,123 @@ export const useHuertoState = (juegoIniciado) => {
     const [estado, dispatch] = useReducer(gameReducer, initialState);
     const [playCrecimiento] = useSound("/sonido-crecimiento.mp3", {volume: 0.5});
 
-    const shakeDataRef = useRef({history: [], lastApplied: 0});
+    const shakeDataRef = useRef({history: [], lastApplied: 0, lastX: 0, lastY: 0});
     const isCurrentlySaving = useRef(false);
 
-    // 1. Cargar estado inicial
+    // 1. CARGA INICIAL: Recuperar progreso del alumno desde BD
     useEffect(() => {
         if (juegoIniciado) {
-            console.log("Huerto: Juego iniciado, cargando estado...");
-            getEstadoHuerto()
-                .then((data) => {
-                    if (data) {
-                        // Si el backend no tiene clima guardado, usamos el default del initialState
-                        const estadoCargado = {
-                            ...data,
-                            clima: data.clima || initialState.clima
-                        };
-                        dispatch({type: "SET_INITIAL_STATE", payload: estadoCargado});
-                    } else {
-                        dispatch({type: "SET_INITIAL_STATE", payload: {}});
-                    }
-                })
-                .catch((err) => {
-                    console.error("Huerto: Error al cargar estado:", err);
-                    dispatch({
-                        type: "SET_LOADING_ERROR",
-                        payload: "No se pudo cargar el progreso.",
+            const studentId = sessionStorage.getItem("current_student_id");
+
+            if (studentId) {
+                // Si hay un alumno seleccionado, buscamos su estado en la lista
+                // (Como no tenemos un endpoint 'getById' específico en el frontend service,
+                // reusamos getAlumnos para filtrar. Es eficiente para clases pequeñas).
+                getAlumnos()
+                    .then(alumnos => {
+                        const alumno = alumnos.find(a => a.id.toString() === studentId);
+                        if (alumno) {
+                            dispatch({type: "SET_INITIAL_STATE", payload: {
+                                etapa: alumno.etapa,
+                                respuestasCorrectas: alumno.aciertos,
+                                // Reseteamos recursos al iniciar sesión para evitar trampas o estados raros
+                                agua: GAME_CONFIG.INITIAL_RESOURCE_LEVEL,
+                                sol: GAME_CONFIG.INITIAL_RESOURCE_LEVEL,
+                                clima: initialState.clima
+                            }});
+                        } else {
+                            // Si no se encuentra (raro), iniciamos de cero
+                            dispatch({type: "SET_INITIAL_STATE", payload: {...initialState, isLoading: false}});
+                        }
+                    })
+                    .catch(err => {
+                        console.error("Error recuperando progreso:", err);
+                        dispatch({type: "SET_LOADING_ERROR", payload: "Error de conexión."});
                     });
-                });
-        } else {
-            dispatch({
-                type: "SET_INITIAL_STATE",
-                payload: {...initialState, isLoading: false},
-            });
+            } else {
+                // Modo sin alumno (si aplicara) o error
+                dispatch({type: "SET_INITIAL_STATE", payload: {...initialState, isLoading: false}});
+            }
         }
     }, [juegoIniciado]);
 
-    // 2. Sistema de Clima Dinámico (Nuevo)
+    // 2. Sistema de Clima
     useEffect(() => {
         if (!juegoIniciado || estado.isLoading) return;
-
-        // Intentar cambiar el clima cada 15 segundos
         const weatherInterval = setInterval(() => {
             const random = Math.random();
             let nextWeather;
+            if (random < 0.6) nextWeather = WEATHER_TYPES.SUNNY;
+            else if (random < 0.8) nextWeather = WEATHER_TYPES.RAINY;
+            else nextWeather = WEATHER_TYPES.HEATWAVE;
 
-            if (random < 0.6) nextWeather = WEATHER_TYPES.SUNNY;      // 60% Soleado
-            else if (random < 0.8) nextWeather = WEATHER_TYPES.RAINY; // 20% Lluvia
-            else nextWeather = WEATHER_TYPES.HEATWAVE;                // 20% Calor
-
-            // Solo actualizar si el clima cambia
             if (nextWeather.id !== estado.clima) {
                 dispatch({type: "CHANGE_WEATHER", payload: nextWeather});
-                // Borrar notificación después de 4 segundos
                 setTimeout(() => dispatch({type: "CLEAR_NOTIFICATION"}), 4000);
             }
         }, 15000);
-
         return () => clearInterval(weatherInterval);
     }, [juegoIniciado, estado.isLoading, estado.clima]);
 
-    // 3. Guardado Automático
+    // 3. GUARDADO AUTOMÁTICO EN BD
     useEffect(() => {
-        if (estado.isLoading || !juegoIniciado || isCurrentlySaving.current) {
-            return;
-        }
+        if (estado.isLoading || !juegoIniciado || isCurrentlySaving.current) return;
 
         const handler = setTimeout(async () => {
             isCurrentlySaving.current = true;
             dispatch({type: "SET_SAVING", payload: true});
-            const {etapa, agua, sol, respuestasCorrectas} = estado;
+
+            const {etapa, respuestasCorrectas} = estado;
+            const studentId = sessionStorage.getItem("current_student_id");
 
             try {
-                await guardarEstadoHuerto({etapa, agua, sol, respuestasCorrectas});
+                if (studentId) {
+                    await actualizarProgresoAlumno(studentId, etapa, respuestasCorrectas);
+                }
             } catch (error) {
-                console.error("Huerto: Error al guardar estado:", error);
+                console.error("Huerto: Error guardando en BD:", error);
             } finally {
                 setTimeout(() => {
                     dispatch({type: "SET_SAVING", payload: false});
                     isCurrentlySaving.current = false;
                 }, GAME_CONFIG.SAVING_INDICATOR_DELAY_MS);
             }
-        }, 1500);
+        }, 2000); // Guardar cada 2s
 
         return () => clearTimeout(handler);
-    }, [
-        estado.etapa,
-        estado.agua,
-        estado.sol,
-        estado.respuestasCorrectas,
-        juegoIniciado,
-        estado.isLoading,
-    ]);
+    }, [estado.etapa, estado.respuestasCorrectas, juegoIniciado, estado.isLoading]);
 
-    // 4. Game Tick (Consumo de recursos)
+    // 4. Game Tick
     useEffect(() => {
         if (juegoIniciado && !estado.isLoading) {
-            const intervalo = setInterval(
-                () => dispatch({type: "GAME_TICK"}),
-                GAME_CONFIG.GAME_TICK_INTERVAL_MS
-            );
+            const intervalo = setInterval(() => dispatch({type: "GAME_TICK"}), GAME_CONFIG.GAME_TICK_INTERVAL_MS);
             return () => clearInterval(intervalo);
         }
     }, [juegoIniciado, estado.isLoading]);
 
-    // 5. Lógica de Crecimiento y Preguntas
+    // 5. Crecimiento
     useEffect(() => {
         if (juegoIniciado && !estado.isLoading) {
             const {etapa, agua, sol, respuestasCorrectas, preguntaActual} = estado;
-            const enRango = (n) =>
-                n >= GAME_CONFIG.GROWTH_THRESHOLD.MIN &&
-                n <= GAME_CONFIG.GROWTH_THRESHOLD.MAX;
+            const enRango = (n) => n >= GAME_CONFIG.GROWTH_THRESHOLD.MIN && n <= GAME_CONFIG.GROWTH_THRESHOLD.MAX;
 
-            if (
-                etapa < GAME_CONFIG.MAX_PLANT_STAGE &&
-                enRango(agua) &&
-                enRango(sol) &&
-                respuestasCorrectas >= 3
-            ) {
+            if (etapa < GAME_CONFIG.MAX_PLANT_STAGE && enRango(agua) && enRango(sol) && respuestasCorrectas >= 3) {
                 dispatch({type: "ADVANCE_STAGE"});
                 playCrecimiento();
                 setTimeout(() => dispatch({type: "HIDE_CELEBRATION"}), 4000);
             }
 
-            if (
-                !preguntaActual &&
-                !estado.etapaCelebracion &&
-                (agua >= 100 || sol >= 100)
-            ) {
+            if (!preguntaActual && !estado.etapaCelebracion && (agua >= 100 || sol >= 100)) {
                 dispatch({type: "SHOW_QUESTION"});
             }
         }
-    }, [
-        estado.agua,
-        estado.sol,
-        estado.respuestasCorrectas,
-        estado.etapa,
-        estado.preguntaActual,
-        estado.etapaCelebracion,
-        estado.isLoading,
-        playCrecimiento,
-        juegoIniciado,
-    ]);
+    }, [estado.agua, estado.sol, estado.respuestasCorrectas, estado.etapa, estado.preguntaActual, estado.etapaCelebracion, estado.isLoading, playCrecimiento, juegoIniciado]);
 
     const acciones = {
-        soltarHerramienta: useCallback((resourceId) => {
-            if (resourceId !== "agua" && resourceId !== "sol") return;
-            dispatch({
-                type: "APPLY_RESOURCE",
-                payload: {
-                    resourceId,
-                    amount: GAME_CONFIG.RESOURCE_INCREASE_ON_DROP,
-                },
-            });
+        soltarHerramienta: useCallback(() => {
             shakeDataRef.current.history = [];
+            shakeDataRef.current.lastX = 0;
+            shakeDataRef.current.lastY = 0;
         }, []),
 
         agitarHerramienta: useCallback((resourceId, delta) => {
@@ -302,34 +275,38 @@ export const useHuertoState = (juegoIniciado) => {
 
             const now = Date.now();
             const shakeConfig = GAME_CONFIG.SHAKE_DETECTION;
-            const shakeHistory = shakeDataRef.current.history;
+            const ref = shakeDataRef.current;
 
-            while (
-                shakeHistory.length > 0 &&
-                shakeHistory[0].timestamp < now - shakeConfig.TIME_MS
-                ) {
-                shakeHistory.shift();
+            const moveX = delta.x - ref.lastX;
+            ref.lastX = delta.x;
+            ref.lastY = delta.y;
+
+            while (ref.history.length > 0 && ref.history[0].timestamp < now - shakeConfig.TIME_MS) {
+                ref.history.shift();
             }
 
-            const distance = Math.sqrt(delta.x * delta.x + delta.y * delta.y);
-            if (distance > shakeConfig.DISTANCE_PX) {
-                shakeHistory.push({timestamp: now, distance});
+            const speedX = Math.abs(moveX);
+            if (speedX > shakeConfig.DISTANCE_PX) {
+                const direction = Math.sign(moveX);
+                ref.history.push({timestamp: now, speed: speedX, direction});
             }
+
+            const hasLeft = ref.history.some(item => item.direction < 0);
+            const hasRight = ref.history.some(item => item.direction > 0);
 
             if (
-                shakeHistory.length >= shakeConfig.COUNT &&
-                now - shakeDataRef.current.lastApplied > shakeConfig.TIME_MS
+                ref.history.length >= shakeConfig.COUNT &&
+                hasLeft && hasRight &&
+                now - ref.lastApplied > shakeConfig.TIME_MS
             ) {
-                shakeDataRef.current.lastApplied = now;
-                shakeDataRef.current.history = [];
+                const totalSpeed = ref.history.reduce((sum, item) => sum + item.speed, 0);
+                const averageSpeed = totalSpeed / ref.history.length;
+                const cantidadDinamica = Math.min(Math.max(Math.floor(averageSpeed * 0.15), 1), 5);
 
-                dispatch({
-                    type: "APPLY_RESOURCE",
-                    payload: {
-                        resourceId,
-                        amount: GAME_CONFIG.RESOURCE_INCREASE_ON_SHAKE,
-                    },
-                });
+                ref.lastApplied = now;
+                ref.history = [];
+
+                dispatch({type: "APPLY_RESOURCE", payload: {resourceId, amount: cantidadDinamica}});
             }
         }, []),
 

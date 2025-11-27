@@ -4,7 +4,7 @@ import React, { memo } from "react";
 import { useDraggable } from "@dnd-kit/core";
 import { TOOL_TYPES } from "../../../constants/gameConfig";
 import PropTypes from "prop-types";
-import clsx from "clsx"; // Importamos clsx para manejar las clases
+import clsx from "clsx";
 
 const Herramienta = memo(
   ({ id, type, isDraggingActive, isCurrentlyDragged, needsAttention }) => {
@@ -26,12 +26,12 @@ const Herramienta = memo(
       return null;
     }
 
-    // Lógica de clases mucho más limpia con clsx
     const containerClasses = clsx(
-      "w-20 h-20 bg-gray-800 rounded-xl flex flex-col items-center justify-center",
+      // AGREGADO: 'touch-none' evita el scroll al arrastrar en móviles
+      "w-20 h-20 bg-gray-800 rounded-xl flex flex-col items-center justify-center touch-none",
       "cursor-grab active:cursor-grabbing transition-all duration-200 text-white border-2",
       {
-        "animate-pulse border-green-400": isCurrentlyDragged, // Renombrada de 'isShaking' para mayor claridad
+        "animate-pulse border-green-400": isCurrentlyDragged,
         "border-transparent": !isCurrentlyDragged,
         "animate-bounce": needsAttention && !isDraggingActive,
         "scale-110 opacity-80 shadow-2xl": isDraggingActive,
@@ -47,7 +47,6 @@ const Herramienta = memo(
         {...attributes}
         className={containerClasses}
       >
-        {/* MODIFICADO: Renderiza el emoji como texto */}
         <span className={`text-3xl ${toolInfo.color}`}>{toolInfo.icon}</span>
         <span className="text-sm capitalize">{toolInfo.name}</span>
       </div>
@@ -59,7 +58,7 @@ Herramienta.propTypes = {
   id: PropTypes.string.isRequired,
   type: PropTypes.oneOf(["agua", "sol"]).isRequired,
   isDraggingActive: PropTypes.bool.isRequired,
-  isCurrentlyDragged: PropTypes.bool.isRequired, // Prop renombrada para mayor claridad
+  isCurrentlyDragged: PropTypes.bool.isRequired,
   needsAttention: PropTypes.bool,
 };
 
