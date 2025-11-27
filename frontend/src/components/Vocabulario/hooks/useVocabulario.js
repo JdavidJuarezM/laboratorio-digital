@@ -1,10 +1,16 @@
+// frontend/src/components/Vocabulario/hooks/useVocabulario.js
+
 import { useState, useEffect, useCallback, useRef } from "react";
+// Mantenemos useAuth solo para cargar el nombre inicial si quieres,
+// pero la lógica de guardado priorizará el input.
+import { useAuth } from "../../../context/AuthContext";
 import { words } from "../constants/wordList";
 import {
   audioEffects,
   initAudio,
   speakWord as speakWordService,
 } from "../services/ttsService";
+import { getHighScore, saveScore } from "../services/vocabularioService";
 
 const shuffle = (array) => {
   const newArray = [...array];
@@ -16,6 +22,8 @@ const shuffle = (array) => {
 };
 
 export const useVocabulario = () => {
+  const { user } = useAuth();
+
   const [gameState, setGameState] = useState("start");
   const [settings, setSettings] = useState({
     playerName: "",
@@ -44,49 +52,51 @@ export const useVocabulario = () => {
     type: "",
   });
   const timerIntervalRef = useRef(null);
-  const hasTimeExpired = useRef(false); // 👈 fix para evitar loop infinito
+  const hasTimeExpired = useRef(false);
 
+  // Cargar HighScore inicial (Aquí sí usamos el de la cuenta o "Tú" como placeholder)
   useEffect(() => {
-    const savedScore = localStorage.getItem("juegoVocabularioHighScore");
-    const savedStreak = localStorage.getItem("juegoVocabularioLongestStreak");
-    const savedPlayer = localStorage.getItem("juegoVocabularioHighPlayer");
+    const loadScore = async () => {
+      const data = await getHighScore();
+      if (data) {
+        setHighScore({
+          score: data.highScore || 0,
+          streak: data.streak || 0,
+          player: user?.nombre || "Tú",
+        });
+      }
+    };
+    loadScore();
+  }, [user]);
 
-    setHighScore({
-      score: savedScore ? parseInt(savedScore, 10) : 0,
-      streak: savedStreak ? parseInt(savedStreak, 10) : 0,
-      player: savedPlayer || "",
-    });
-  }, []);
-
-  const saveHighScore = useCallback(() => {
+  // --- AQUÍ ESTÁ LA CORRECCIÓN ---
+  const handleSaveHighScore = useCallback(() => {
     const { points, longestStreak } = gameStats;
-    const currentPlayerName = settings.playerName.trim() || "Anónimo";
+
+    // Usamos el nombre que el usuario escribió en el input.
+    // Si lo dejó vacío, usamos "Anónimo" o el de la cuenta.
+    const nombreJugador = settings.playerName.trim() || user?.nombre || "Anónimo";
 
     if (points > highScore.score) {
-      localStorage.setItem("juegoVocabularioHighScore", points);
-      localStorage.setItem("juegoVocabularioHighPlayer", currentPlayerName);
+      // Guardamos en el backend (se vincula a la cuenta logueada)
+      saveScore(points, longestStreak).catch(err => console.error(err));
+
+      // Actualizamos el estado visual con el NOMBRE DEL INPUT
       setHighScore((prev) => ({
         ...prev,
         score: points,
-        player: currentPlayerName,
+        streak: longestStreak,
+        player: nombreJugador, // <--- Este es el cambio que pediste
       }));
     }
-    if (longestStreak > highScore.streak) {
-      localStorage.setItem("juegoVocabularioLongestStreak", longestStreak);
-      setHighScore((prev) => ({ ...prev, streak: longestStreak }));
-    }
-  }, [gameStats, settings.playerName, highScore]);
+  }, [gameStats, highScore, settings.playerName, user]); // Agregamos settings.playerName a dependencias
 
   const getTimerForDifficulty = useCallback(() => {
     switch (settings.difficulty) {
-      case "easy":
-        return 45;
-      case "medium":
-        return 30;
-      case "hard":
-        return 20;
-      default:
-        return 30;
+      case "easy": return 45;
+      case "medium": return 30;
+      case "hard": return 20;
+      default: return 30;
     }
   }, [settings.difficulty]);
 
@@ -97,12 +107,12 @@ export const useVocabulario = () => {
 
   const nextWord = useCallback(() => {
     clearInterval(timerIntervalRef.current);
-    hasTimeExpired.current = false; // 👈 reset de la bandera para la próxima palabra
+    hasTimeExpired.current = false;
 
     if (wordsAvailable.length === 0) {
       setGameState("end");
       audioEffects.playGameOver();
-      saveHighScore();
+      handleSaveHighScore(); // Al terminar llama a la función corregida
       return;
     }
 
@@ -114,6 +124,11 @@ export const useVocabulario = () => {
     setUserInput([]);
     setHasHintBeenUsed(false);
 
+    setGameStats((prev) => ({
+      ...prev,
+      attempts: prev.attempts + 1,
+    }));
+
     if (settings.timerEnabled) {
       const initialTime = getTimerForDifficulty();
       setTimer(initialTime);
@@ -124,7 +139,7 @@ export const useVocabulario = () => {
   }, [
     wordsAvailable,
     settings.timerEnabled,
-    saveHighScore,
+    handleSaveHighScore,
     getTimerForDifficulty,
   ]);
 
@@ -148,12 +163,11 @@ export const useVocabulario = () => {
   }, [settings.difficulty]);
 
   useEffect(() => {
-    if (gameState === "playing" && wordsAvailable.length > 0 && !currentWord) {
+    if (gameState === "playing" && !currentWord && wordsAvailable.length > 0) {
       nextWord();
     }
-  }, [gameState, wordsAvailable, currentWord, nextWord]);
+  }, [gameState, currentWord, wordsAvailable, nextWord]);
 
-  // 👇 FIX: evitar loop cuando timer llega a 0
   useEffect(() => {
     if (
       timer === 0 &&

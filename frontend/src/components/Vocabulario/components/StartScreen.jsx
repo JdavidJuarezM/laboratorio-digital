@@ -1,4 +1,5 @@
 // src/components/Vocabulario/components/StartScreen.jsx
+// src/components/Vocabulario/components/StartScreen.jsx
 
 import React from "react";
 import { initAudio } from "../services/ttsService";
@@ -16,22 +17,18 @@ const StartScreen = ({
   };
 
   return (
-    // Ajustamos padding y max-width para diferentes pantallas
     <div className="card p-4 xs:p-6 sm:p-8 w-full max-w-md sm:max-w-lg text-center border-purple-500 bg-white rounded-2xl shadow-xl flex flex-col">
-      {/* Título adaptable */}
       <h1 className="text-3xl xs:text-4xl sm:text-5xl font-bold text-blue-800 mb-2 sm:mb-4 drop-shadow-lg">
         Juego de Vocabulario
       </h1>
-      {/* Descripción adaptable */}
       <p className="text-base sm:text-lg text-gray-700 mb-4 sm:mb-6">
         ¡Aprende nuevas palabras de forma divertida!
       </p>
 
-      {/* --- SECCIÓN DE ENTRADA DE NOMBRE (ajustes menores de margen) --- */}
+      {/* --- SECCIÓN DE ENTRADA DE NOMBRE --- */}
       <div className="w-full text-left mb-4 sm:mb-6">
         <label
           htmlFor="player-name"
-          // Tamaño de fuente adaptable
           className="block text-base sm:text-lg font-semibold text-gray-700 mb-1 sm:mb-2"
         >
           Tu nombre:
@@ -44,22 +41,19 @@ const StartScreen = ({
           onChange={(e) =>
             setSettings((prev) => ({ ...prev, playerName: e.target.value }))
           }
-          // Padding y tamaño de fuente adaptables
           className="w-full p-2 sm:p-3 text-base sm:text-lg rounded-lg border-2 border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
         />
       </div>
 
-      {/* --- SECCIÓN DE DIFICULTAD (ajustes de espaciado y tamaño) --- */}
+      {/* --- SECCIÓN DE DIFICULTAD --- */}
       <div className="w-full text-left mb-4 sm:mb-8">
         <label className="block text-base sm:text-lg font-semibold text-gray-700 mb-1 sm:mb-2">
           Selecciona la dificultad:
         </label>
-        {/* Usamos flex-wrap para que se ajuste en pantallas muy pequeñas si es necesario */}
         <div className="flex flex-wrap justify-around gap-2 sm:gap-3">
           {["easy", "medium", "hard"].map((level) => (
             <label
               key={level}
-              // Padding adaptable
               className={`flex-1 min-w-[80px] sm:min-w-[100px] flex items-center justify-center cursor-pointer p-2 sm:p-3 rounded-xl border-2 transition-all duration-200
                                         ${
                                           settings.difficulty === level
@@ -90,10 +84,9 @@ const StartScreen = ({
                     difficulty: e.target.value,
                   }))
                 }
-                className="sr-only" // Oculta el radio button por defecto
+                className="sr-only"
               />
               <span
-                // Tamaño de fuente adaptable
                 className={`text-base sm:text-lg font-bold ${
                   settings.difficulty === level
                     ? `text-${
@@ -117,7 +110,7 @@ const StartScreen = ({
         </div>
       </div>
 
-      {/* --- INTERRUPTOR DE TEMPORIZADOR (ajustes de padding y tamaño de fuente) --- */}
+      {/* --- INTERRUPTOR DE TEMPORIZADOR --- */}
       <div className="w-full text-left mb-4 sm:mb-8 flex justify-between items-center bg-gray-100 p-3 sm:p-4 rounded-xl border-2 border-gray-300">
         <span className="text-base sm:text-lg font-semibold text-gray-700">
           Activar Temporizador
@@ -138,7 +131,7 @@ const StartScreen = ({
         </label>
       </div>
 
-      {/* --- SECCIÓN DE PUNTUACIÓN MÁXIMA (tamaños de fuente adaptables) --- */}
+      {/* --- SECCIÓN DE PUNTUACIÓN MÁXIMA (SIN NOMBRE) --- */}
       <div className="w-full mb-4 sm:mb-8 text-center bg-gray-100 p-3 sm:p-4 rounded-xl border-2 border-gray-300">
         <h2 className="text-lg sm:text-xl font-bold text-gray-700 mb-1 sm:mb-2">
           Mejor Puntuación
@@ -149,26 +142,19 @@ const StartScreen = ({
         <p className="text-base sm:text-lg text-indigo-600 font-semibold mb-0.5 sm:mb-1">
           Racha: {highScore.streak}
         </p>
-        {highScore.player && (
-          <p className="text-xs sm:text-sm text-gray-500 mt-1 sm:mt-2 italic">
-            ({highScore.player})
-          </p>
-        )}
+        {/* Aquí eliminé el bloque que mostraba (highScore.player) */}
       </div>
 
-      {/* --- BOTONES DE ACCIÓN (tamaño de fuente y padding adaptables) --- */}
-      {/* Usamos flex-grow en un div invisible para empujar los botones hacia abajo si hay espacio */}
+      {/* --- BOTONES DE ACCIÓN --- */}
       <div className="flex-grow"></div>
       <button
         onClick={handleStartClick}
-        // Padding y tamaño de fuente adaptables
         className="button bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white font-bold py-3 px-6 sm:py-4 sm:px-8 rounded-full shadow-lg text-lg sm:text-2xl w-full transition-transform transform hover:scale-105"
       >
         ¡Jugar ahora!
       </button>
       <button
         onClick={onHelp}
-        // Tamaño de fuente adaptable
         className="mt-3 sm:mt-4 text-sm sm:text-base text-blue-500 hover:text-blue-700 font-semibold transition"
       >
         ¿Cómo se juega?
