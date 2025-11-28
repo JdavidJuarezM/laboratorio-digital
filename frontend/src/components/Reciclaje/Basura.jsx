@@ -1,4 +1,3 @@
-// javascript
 // frontend/src/components/Reciclaje/Basura.jsx
 import React, { useMemo, forwardRef } from 'react';
 import { useDraggable } from '@dnd-kit/core';
@@ -6,12 +5,10 @@ import { useDraggable } from '@dnd-kit/core';
 export const BasuraVisual = forwardRef(({ item, isDragging, ...props }, ref) => {
   const randomRotation = useMemo(() => Math.floor(Math.random() * 20) - 10, [item]);
 
-  // MODIFICADO: El icono ahora viene de item.icon (renombrado de item.svg en constants.js)
-  // y es un emoji.
   let iconElement = null;
   if (item?.icon) {
     iconElement = (
-      <span className="text-6xl" role="img" aria-label={item?.name || ''}>
+      <span className="text-7xl filter drop-shadow-md" role="img" aria-label={item?.name || ''}>
         {item.icon}
       </span>
     );
@@ -19,42 +16,63 @@ export const BasuraVisual = forwardRef(({ item, isDragging, ...props }, ref) => 
 
   const hasIcon = !!iconElement;
 
+  // Clases dinámicas para un look más "tarjeta de juego"
   const itemClasses = [
-    'bg-white',
-    'p-4',
-    'rounded-lg',
+    // Base: Tarjeta blanca suave con bordes muy redondeados y sombra
+    'relative',
+    'flex',
+    'flex-col',
+    'items-center',
+    'justify-center',
+    'w-32', // Ancho fijo para consistencia
+    'h-36', // Alto fijo
+    'bg-white', // Fondo blanco
+    'rounded-[2rem]', // Bordes muy redondos (estilo iOS/Modern)
+    'shadow-[0_8px_0_rgba(0,0,0,0.1)]', // Sombra sólida estilo 3D cartoon
+    'border-4', // Borde grueso
+    'border-white',
     'transform',
+    'transition-all',
+    'duration-200',
+    'cursor-grab',
+    'active:cursor-grabbing',
     hasIcon ? 'has-icon' : '',
-    item?.type === 'danger' ? 'danger-item' : '',
-    item?.type === 'powerup' ? 'powerup-item' : '',
-    isDragging ? 'dragging' : ''
+    // Estilos específicos por tipo
+    item?.type === 'danger' ? 'danger-item bg-red-50 border-red-200' : '',
+    item?.type === 'powerup' ? 'powerup-item bg-amber-50 border-amber-200' : '',
+    isDragging ? 'dragging scale-110 rotate-12 z-50 shadow-[0_20px_40px_rgba(0,0,0,0.3)]' : 'hover:-translate-y-1'
   ].join(' ').trim();
-
 
   return (
     <div
       ref={ref}
       id="currentItem"
       className={itemClasses}
-      style={{ '--random-rotation': `${randomRotation}deg` }}
+      style={{
+        '--random-rotation': `${randomRotation}deg`,
+        // Si no se está arrastrando, aplicamos la rotación aleatoria para que se vea natural
+        transform: !isDragging ? `rotate(${randomRotation}deg)` : undefined
+      }}
       {...props}
     >
+      {/* Brillo decorativo */}
+      <div className="absolute top-2 right-2 w-4 h-4 bg-white/50 rounded-full blur-[1px]"></div>
+
       {hasIcon ? (
         <>
-          <div className="icon-container" aria-hidden={false}>
+          <div className="icon-container transform transition-transform group-hover:scale-110" aria-hidden={false}>
             {iconElement}
           </div>
-          <div className="text-center font-medium text-gray-800 text-lg mt-1 item-name">
+          <div className={`text-center font-black text-sm mt-2 px-2 leading-tight ${
+            item?.type === 'danger' ? 'text-red-500' : 'text-slate-600'
+          }`}>
               {item?.name}
           </div>
         </>
       ) : (
-        <>
-          {/* Fallback por si algo no tiene icono */}
-          <div className="text-center font-medium text-gray-800 text-lg mt-1 item-name">
-            {item?.name}
-          </div>
-        </>
+        <div className="text-center font-bold text-gray-800 text-lg">
+          {item?.name}
+        </div>
       )}
     </div>
   );
@@ -63,26 +81,24 @@ export const BasuraVisual = forwardRef(({ item, isDragging, ...props }, ref) => 
 const Basura = ({ item }) => {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: item?.name || `item-${Math.random()}`,
-    data: item,
+    data: { current: item }, // Pasamos el item completo en 'data.current'
   });
 
   const style = transform
     ? {
         transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
-        zIndex: 100,
-        visibility: isDragging ? 'hidden' : 'visible',
+        zIndex: 999, // Asegurar que esté por encima de todo al arrastrar
+        position: 'relative' // Necesario para el z-index
       }
     : undefined;
 
   return (
-    <BasuraVisual
-      ref={setNodeRef}
-      style={style}
-      item={item}
-      isDragging={isDragging}
-      {...listeners}
-      {...attributes}
-    />
+    <div ref={setNodeRef} style={style} {...listeners} {...attributes} className="touch-none">
+        {/* Si se está arrastrando, ocultamos el original para mostrar solo el DragOverlay (opcional, o bajamos opacidad) */}
+       <div className={isDragging ? 'opacity-0' : 'opacity-100'}>
+          <BasuraVisual item={item} />
+       </div>
+    </div>
   );
 };
 
