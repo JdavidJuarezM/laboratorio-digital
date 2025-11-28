@@ -6,7 +6,9 @@ const PauseModal = ({ onResume }) => {
   return (
     <motion.div
       id="pauseModal"
+      // AGREGADO: style={{ pointerEvents: 'auto' }} para sobreescribir el CSS y permitir clics
       className="fixed inset-0 bg-black/70 flex items-center justify-center z-[9999]"
+      style={{ pointerEvents: 'auto' }}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
@@ -21,8 +23,11 @@ const PauseModal = ({ onResume }) => {
         <p className="text-3xl">¡Tómate un respiro!</p>
         <button
           id="resumeModalBtn"
-          className="text-white"
-          onClick={onResume}
+          className="text-white cursor-pointer" // Aseguramos cursor pointer
+          onClick={(e) => {
+            e.stopPropagation(); // Buena práctica para evitar propagación
+            onResume();
+          }}
         >
           ¡Reanudar!
         </button>

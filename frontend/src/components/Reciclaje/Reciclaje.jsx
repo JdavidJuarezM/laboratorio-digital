@@ -1,3 +1,4 @@
+// frontend/src/components/Reciclaje/Reciclaje.jsx
 import React, { useEffect, useState } from 'react';
 import { useReciclaje } from './hooks/useReciclaje.js';
 import { binData } from './constants.js';
@@ -14,7 +15,7 @@ import PanelReciclaje from './PanelReciclaje';
 import './Reciclaje.css';
 import { useNavigate } from "react-router-dom";
 
-// Componente de Corazón (Más bonito y visible)
+// Componente de Corazón
 const HeartIcon = ({ isLost }) => (
   <div className={`w-8 h-8 transition-all duration-500 ${isLost ? 'opacity-20 grayscale scale-75' : 'scale-110 drop-shadow-lg text-red-500'}`}>
     <svg viewBox="0 0 24 24" className="w-full h-full fill-current filter drop-shadow-sm">
@@ -51,12 +52,30 @@ const Reciclaje = () => {
     }
   }
 
+  // --- HANDLERS PARA GESTIÓN DE ADMIN Y PAUSA ---
+
+  const handleOpenAdmin = () => {
+    if (state.gameState === 'playing') {
+      dispatch({ type: 'PAUSE' });
+    }
+    setShowAdminLogin(true);
+  };
+
+  const handleCancelAdmin = () => {
+    setShowAdminLogin(false);
+    // Si estaba pausado y no hay game over, reanudamos
+    if (state.gameState === 'paused') {
+      dispatch({ type: 'RESUME' });
+    }
+  };
+
   const handleAdminAccess = (e) => {
     e.preventDefault();
     if (adminPassword === MASTER_KEY) {
       setShowPanel(true);
       setShowAdminLogin(false);
       setAdminPassword("");
+      // No reanudamos aquí. El juego sigue pausado detrás del panel.
     } else {
       alert("Clave incorrecta");
     }
@@ -66,18 +85,15 @@ const Reciclaje = () => {
     <DndContext onDragEnd={handleDragEnd} onDragStart={handleDragStart}>
       <div id="gameContainer" className={`w-full h-screen fixed inset-0 overflow-hidden font-sans selection:bg-none ${state.isFeverModeActive ? 'fever-mode' : ''}`}>
 
-        {/* 1. CAPA DE FONDO (Animado) */}
+        {/* 1. CAPA DE FONDO */}
         <div className="absolute inset-0 z-0 bg-gradient-to-b from-sky-400 via-sky-200 to-green-100">
           <Paisaje />
         </div>
 
-        {/* Efecto Flash */}
         {state.screenFlash && <div className="absolute inset-0 z-50 bg-white/60 animate-ping pointer-events-none" />}
 
-        {/* 2. HUD SUPERIOR (Barra de Estado) */}
+        {/* 2. HUD SUPERIOR */}
         <nav className="absolute top-0 left-0 w-full z-40 px-4 py-3 flex justify-between items-center bg-white/80 backdrop-blur-md shadow-lg border-b border-white/50 safe-area-top">
-
-            {/* Info Jugador */}
             <div className="flex items-center gap-4">
                 <div className="flex flex-col">
                     <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Puntos</span>
@@ -88,24 +104,19 @@ const Reciclaje = () => {
                       )}
                     </div>
                 </div>
-
                 <div className="h-8 w-px bg-slate-300 hidden md:block"></div>
-
                 <div className="hidden md:flex items-center gap-2">
                     {[...Array(3)].map((_, i) => <HeartIcon key={i} isLost={i >= state.lives} />)}
                 </div>
             </div>
 
-            {/* Centro: Nivel */}
             <div className="absolute left-1/2 -translate-x-1/2 top-3">
                 <div className="bg-yellow-400 text-yellow-900 px-4 py-1 rounded-full font-black text-sm shadow-md border-2 border-yellow-200">
                     NIVEL {state.currentLevel}
                 </div>
             </div>
 
-            {/* Botones */}
             <div className="flex items-center gap-2">
-                {/* Vidas en móvil */}
                 <div className="flex md:hidden mr-2 gap-1">
                     {[...Array(3)].map((_, i) => (
                         <div key={i} className={`w-6 h-6 ${i >= state.lives ? 'opacity-20 grayscale' : 'text-red-500'}`}>
@@ -113,19 +124,15 @@ const Reciclaje = () => {
                         </div>
                     ))}
                 </div>
-
                 <button onClick={togglePause} className="p-2 bg-white hover:bg-yellow-50 rounded-xl shadow-sm text-yellow-600 border border-yellow-100 text-xl transition">⏸</button>
                 <button onClick={() => navigate('/dashboard')} className="p-2 bg-white hover:bg-red-50 rounded-xl shadow-sm text-red-600 border border-red-100 text-xl transition">🚪</button>
-                <button onClick={() => setShowAdminLogin(true)} className="hidden md:block p-2 bg-gray-100 text-gray-500 rounded-xl">⚙️</button>
+                <button onClick={handleOpenAdmin} className="hidden md:block p-2 bg-gray-100 text-gray-500 rounded-xl">⚙️</button>
             </div>
         </nav>
 
-        {/* 3. ÁREA DE JUEGO PRINCIPAL */}
+        {/* 3. ÁREA DE JUEGO */}
         <main className="relative z-10 flex flex-col h-full pt-20 pb-0 pointer-events-none justify-between">
-
-            {/* ZONA SUPERIOR: EcoBot y Mensajes */}
             <div className="relative flex-1 w-full flex justify-center items-center pointer-events-none min-h-[150px]">
-                 {/* EcoBot Flotante */}
                  <div className="absolute right-4 top-4 md:right-20 md:top-10 pointer-events-auto animate-float">
                     <div className="w-24 h-24 md:w-36 md:h-36 drop-shadow-2xl filter hover:brightness-110 transition-all cursor-help">
                         <EcoBot message={state.botMessage} expression={state.botExpression} />
@@ -133,7 +140,6 @@ const Reciclaje = () => {
                  </div>
             </div>
 
-            {/* ZONA MEDIA: Cinta Transportadora */}
             <div className="relative w-full flex justify-center pointer-events-auto z-20 mb-[-20px] md:mb-[-30px]">
                 <div
                     id="conveyorBelt"
@@ -147,24 +153,18 @@ const Reciclaje = () => {
                     `}
                     style={{ '--belt-speed': `${state.timerSpeed / 100}s` }}
                 >
-                    {/* Detalles visuales de la cinta */}
                     <div className="absolute inset-0 opacity-10 bg-[repeating-linear-gradient(45deg,transparent,transparent_10px,#000_10px,#000_20px)]"></div>
                     <div className="conveyor-roller left scale-75 md:scale-100"></div>
                     <div className="conveyor-roller right scale-75 md:scale-100"></div>
-
-                    {/* Item Spawner */}
                     <div className="relative z-30 cursor-grab active:cursor-grabbing hover:scale-110 transition-transform">
                         {state.currentItem && <Basura item={state.currentItem} />}
                     </div>
-
-                    {/* Barra de Tiempo */}
                     <div className="absolute bottom-0 left-0 h-2 bg-slate-900 w-full">
                         <div className={`h-full transition-all duration-200 ${state.itemTimerFill < 30 ? 'bg-red-500' : state.itemTimerFill < 60 ? 'bg-yellow-500' : 'bg-green-500'}`} style={{ width: `${state.itemTimerFill}%` }} />
                     </div>
                 </div>
             </div>
 
-            {/* ZONA INFERIOR: Panel de Botes (El "Suelo" Moderno) */}
             <div className="w-full bg-white/30 backdrop-blur-lg border-t border-white/40 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] pointer-events-auto rounded-t-[2.5rem] z-10 pb-6 pt-10 px-4">
                 <div className="max-w-5xl mx-auto">
                     <div className="grid grid-cols-3 gap-3 md:grid-cols-6 md:gap-6">
@@ -176,22 +176,33 @@ const Reciclaje = () => {
                     </div>
                 </div>
             </div>
-
         </main>
 
         {/* --- MODALES Y PANELES --- */}
         {state.gameState === 'welcome' && <WelcomeModal onStart={startGame} />}
         {state.gameState === 'gameOver' && <GameOverModal score={state.score} highScore={state.highScore} stats={state.gameStats} onRestart={startGame} />}
-        {state.gameState === 'paused' && <PauseModal onResume={togglePause} />}
+
+        {/* CORRECCIÓN PRINCIPAL AQUÍ: */}
+        {/* Solo mostramos el modal de Pausa si está pausado Y NO hay ningún modal de admin abierto */}
+        {state.gameState === 'paused' && !showAdminLogin && !showPanel && (
+            <PauseModal onResume={togglePause} />
+        )}
 
         {showAdminLogin && (
-          <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[70] p-4 backdrop-blur-sm">
+          <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[10000] p-4 backdrop-blur-sm">
             <div className="bg-white p-6 rounded-3xl shadow-2xl w-full max-w-sm border-4 border-green-500 animate-bounce-in">
               <h3 className="text-xl font-bold mb-4 text-green-800 text-center">Acceso Maestro</h3>
               <form onSubmit={handleAdminAccess} className="space-y-4">
-                <input type="password" value={adminPassword} onChange={(e)=>setAdminPassword(e.target.value)} className="w-full border-2 border-gray-200 p-3 rounded-xl text-center outline-none focus:border-green-500" placeholder="Código..." autoFocus />
+                <input
+                  type="password"
+                  value={adminPassword}
+                  onChange={(e)=>setAdminPassword(e.target.value)}
+                  className="w-full border-2 border-gray-200 p-3 rounded-xl text-center outline-none focus:border-green-500"
+                  placeholder="Código..."
+                  autoFocus
+                />
                 <div className="flex gap-2">
-                    <button type="button" onClick={()=>setShowAdminLogin(false)} className="flex-1 py-2 bg-gray-100 rounded-lg font-bold text-gray-500">Cancelar</button>
+                    <button type="button" onClick={handleCancelAdmin} className="flex-1 py-2 bg-gray-100 rounded-lg font-bold text-gray-500">Cancelar</button>
                     <button type="submit" className="flex-1 py-2 bg-green-600 text-white rounded-lg font-bold">Entrar</button>
                 </div>
               </form>
@@ -199,7 +210,16 @@ const Reciclaje = () => {
           </div>
         )}
 
-        {showPanel && <PanelReciclaje onClose={() => { setShowPanel(false); window.location.reload(); }} />}
+        {showPanel && (
+            <PanelReciclaje
+                onClose={() => {
+                    setShowPanel(false);
+                    // Opcional: Si quieres que siga pausado, no hagas nada.
+                    // Si quieres que recargue para aplicar cambios (lo que ya tenías):
+                    window.location.reload();
+                }}
+            />
+        )}
       </div>
 
       <DragOverlay dropAnimation={{ duration: 200 }}>
