@@ -2,13 +2,12 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { bancoDePreguntas as preguntasDefault } from "../../../constants/bancoDePreguntas";
-// Servicios para conectar con la Base de Datos
 import { getAlumnos, crearAlumno, eliminarAlumno } from "../../../services/alumnosService";
 import { getPreguntas, guardarPreguntas } from "../../../services/preguntasService";
 
 // Configuración con variable de entorno
 const DEFAULT_CONFIG = {
-  codigoMaestro: import.meta.env.VITE_TEACHER_CODE
+  codigoMaestro: import.meta.env.VITE_TEACHER_CODE || "PROFE123",
 };
 
 const TeacherPanel = ({ onClose, isOpen }) => {
@@ -36,14 +35,13 @@ const TeacherPanel = ({ onClose, isOpen }) => {
         const dataAlumnos = await getAlumnos();
         setAlumnos(dataAlumnos);
 
-        // 2. Cargar Preguntas Personalizadas
+        // 2. Cargar Preguntas de la BD
         const dataPreguntas = await getPreguntas();
         if (dataPreguntas) {
-            // Si el backend devuelve preguntas, las usamos. Si no, se quedan las default.
             setPreguntas(dataPreguntas);
         }
     } catch (error) {
-        console.error("Error cargando datos del panel:", error);
+        console.error("Error cargando datos:", error);
     } finally {
         setLoading(false);
     }
@@ -71,12 +69,12 @@ const TeacherPanel = ({ onClose, isOpen }) => {
       setAlumnos(data);
       setNuevoAlumno("");
     } catch (error) {
-      alert("Error al crear alumno. Verifica la conexión.");
+      alert("Error al crear alumno.");
     }
   };
 
   const handleEliminarAlumno = async (id) => {
-    if (window.confirm("¿Estás seguro? Se borrará el alumno y todo su progreso de la base de datos.")) {
+    if (window.confirm("¿Estás seguro? Se borrará el alumno y su progreso de la base de datos.")) {
       try {
         await eliminarAlumno(id);
         const data = await getAlumnos(); // Recargar lista
@@ -87,19 +85,18 @@ const TeacherPanel = ({ onClose, isOpen }) => {
     }
   };
 
-  // --- MANEJADORES DE PREGUNTAS (BASE DE DATOS) ---
+  // --- MANEJADORES DE PREGUNTAS ---
 
   const handleGuardarPreguntas = async () => {
     try {
         await guardarPreguntas(preguntas);
-        alert("¡Preguntas guardadas correctamente en la Base de Datos!");
+        alert("¡Cambios guardados exitosamente en la Base de Datos!");
     } catch (error) {
         console.error(error);
-        alert("Error al guardar preguntas en el servidor.");
+        alert("Error al guardar las preguntas.");
     }
   };
 
-  // Edición local del estado antes de guardar
   const handleEditPreguntaTexto = (etapa, index, value) => {
     const nuevas = { ...preguntas };
     nuevas[etapa][index].pregunta = value;
@@ -126,6 +123,13 @@ const TeacherPanel = ({ onClose, isOpen }) => {
     setPreguntas(nuevas);
   };
 
+  // Activar/Desactivar pregunta
+  const handleToggleHabilitada = (etapa, index, checked) => {
+    const nuevas = { ...preguntas };
+    nuevas[etapa][index].habilitada = checked;
+    setPreguntas(nuevas);
+  };
+
   const handleNuevaPregunta = (etapa) => {
     const nuevas = { ...preguntas };
     if (!nuevas[etapa]) nuevas[etapa] = [];
@@ -133,13 +137,14 @@ const TeacherPanel = ({ onClose, isOpen }) => {
     nuevas[etapa].push({
         pregunta: "¿Nueva pregunta?",
         opciones: ["Opción A", "Opción B", "Opción C"],
-        correcta: "Opción A"
+        correcta: "Opción A",
+        habilitada: true
     });
     setPreguntas(nuevas);
   };
 
   const handleEliminarPregunta = (etapa, index) => {
-    if(window.confirm("¿Borrar esta pregunta?")) {
+    if(window.confirm("¿Borrar esta pregunta permanentemente?")) {
         const nuevas = { ...preguntas };
         nuevas[etapa].splice(index, 1);
         setPreguntas(nuevas);
@@ -153,7 +158,7 @@ const TeacherPanel = ({ onClose, isOpen }) => {
       <motion.div
         initial={{ scale: 0.95, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        className="bg-white w-full max-w-5xl h-[90vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden"
+        className="bg-white w-full max-w-6xl h-[90vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden"
       >
 
         {/* HEADER */}
@@ -169,8 +174,10 @@ const TeacherPanel = ({ onClose, isOpen }) => {
           </button>
         </div>
 
-        {/* CONTENIDO */}
+        {/* CONTENIDO PRINCIPAL */}
         <div className="flex-1 overflow-hidden flex flex-col bg-slate-50">
+
+          {/* PANTALLA DE LOGIN */}
           {!isAuthenticated ? (
             <div className="flex-1 flex flex-col items-center justify-center p-8">
                <div className="bg-white p-10 rounded-2xl shadow-xl border border-gray-200 max-w-md w-full text-center">
@@ -196,9 +203,11 @@ const TeacherPanel = ({ onClose, isOpen }) => {
                </div>
             </div>
           ) : (
+
+            /* PANTALLA DEL PANEL (YA AUTENTICADO) */
             <div className="flex h-full">
 
-               {/* SIDEBAR */}
+               {/* SIDEBAR DE NAVEGACIÓN */}
                <div className="w-64 bg-white border-r border-gray-200 flex flex-col shadow-sm z-10">
                   <div className="p-4 space-y-2">
                     <button
@@ -216,10 +225,10 @@ const TeacherPanel = ({ onClose, isOpen }) => {
                   </div>
                </div>
 
-               {/* ÁREA PRINCIPAL */}
+               {/* ÁREA DE TRABAJO */}
                <div className="flex-1 p-8 overflow-y-auto custom-scrollbar">
 
-                  {/* --- VISTA DE ALUMNOS --- */}
+                  {/* --- PESTAÑA: ALUMNOS --- */}
                   {activeTab === 'dashboard' && (
                     <div className="animate-fadeIn max-w-4xl mx-auto">
                       <h3 className="text-3xl font-bold mb-6 text-slate-800">Mis Alumnos</h3>
@@ -282,7 +291,7 @@ const TeacherPanel = ({ onClose, isOpen }) => {
                             {alumnos.length === 0 && (
                                 <div className="p-12 text-center text-gray-400 flex flex-col items-center">
                                     <span className="text-4xl mb-3 opacity-50">📭</span>
-                                    <p>No tienes alumnos registrados en la base de datos.</p>
+                                    <p>No tienes alumnos registrados.</p>
                                 </div>
                             )}
                         </div>
@@ -290,19 +299,19 @@ const TeacherPanel = ({ onClose, isOpen }) => {
                     </div>
                   )}
 
-                  {/* --- VISTA DE PREGUNTAS (CON BOTONES Y EDICIÓN COMPLETA) --- */}
+                  {/* --- PESTAÑA: PREGUNTAS --- */}
                   {activeTab === 'preguntas' && (
-                    <div className="animate-fadeIn max-w-4xl mx-auto">
+                    <div className="animate-fadeIn max-w-5xl mx-auto">
                         <div className="flex justify-between items-center mb-8 sticky top-0 bg-slate-50 py-4 z-10 border-b border-slate-200">
                             <div>
                                 <h3 className="text-3xl font-bold text-slate-800">Editor de Cuestionario</h3>
-                                <p className="text-gray-500">Personaliza las preguntas. Se guardarán en la Base de Datos.</p>
+                                <p className="text-gray-500">Personaliza las preguntas de cada etapa.</p>
                             </div>
                             <button
                                 onClick={handleGuardarPreguntas}
                                 className="bg-blue-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg hover:bg-blue-700 transition-transform hover:scale-105 flex items-center gap-2"
                             >
-                                <span>💾</span> Guardar Todo
+                                <span>💾</span> Guardar Cambios
                             </button>
                         </div>
 
@@ -321,17 +330,34 @@ const TeacherPanel = ({ onClose, isOpen }) => {
 
                                     <div className="space-y-6">
                                         {preguntas[etapa].map((p, idx) => (
-                                            <div key={idx} className="bg-slate-50 p-5 rounded-xl border border-slate-200 relative group transition-all hover:border-blue-300 hover:shadow-md">
-                                                {/* Botón Eliminar Pregunta */}
+                                            <div
+                                                key={idx}
+                                                className={`p-5 rounded-xl border relative group transition-all hover:shadow-md ${p.habilitada !== false ? 'bg-slate-50 border-slate-200' : 'bg-gray-100 border-gray-300 opacity-70'}`}
+                                            >
+
+                                                {/* Botón Eliminar */}
                                                 <button
                                                     onClick={() => handleEliminarPregunta(etapa, idx)}
-                                                    className="absolute top-4 right-4 text-gray-300 hover:text-red-500 transition-colors"
+                                                    className="absolute top-4 right-4 text-gray-300 hover:text-red-500 transition-colors z-10"
                                                     title="Eliminar pregunta"
                                                 >
                                                     ✖
                                                 </button>
 
-                                                <div className="mb-4 pr-8">
+                                                {/* Checkbox Habilitar */}
+                                                <div className="absolute top-4 right-12 flex items-center gap-2 z-10">
+                                                    <label className="text-xs font-bold text-gray-500 uppercase cursor-pointer select-none" onClick={(e) => e.stopPropagation()}>
+                                                        {p.habilitada !== false ? "Activa" : "Inactiva"}
+                                                    </label>
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={p.habilitada !== false}
+                                                        onChange={(e) => handleToggleHabilitada(etapa, idx, e.target.checked)}
+                                                        className="w-4 h-4 cursor-pointer accent-blue-600"
+                                                    />
+                                                </div>
+
+                                                <div className="mb-4 pr-32">
                                                     <label className="block text-xs font-bold text-blue-600 uppercase mb-1">Pregunta {idx + 1}</label>
                                                     <input
                                                         className="w-full border-2 border-gray-200 p-3 rounded-lg focus:border-blue-400 outline-none font-medium bg-white"
@@ -341,7 +367,6 @@ const TeacherPanel = ({ onClose, isOpen }) => {
                                                     />
                                                 </div>
 
-                                                {/* Edición de las 3 opciones */}
                                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                                     {p.opciones.map((opcion, optIdx) => (
                                                         <div
@@ -377,7 +402,6 @@ const TeacherPanel = ({ onClose, isOpen }) => {
                                         ))}
                                     </div>
 
-                                    {/* Botón Agregar Nueva Pregunta */}
                                     <button
                                         onClick={() => handleNuevaPregunta(etapa)}
                                         className="mt-6 w-full py-3 border-2 border-dashed border-gray-300 rounded-xl text-gray-500 font-bold hover:border-blue-400 hover:text-blue-500 hover:bg-blue-50 transition-all flex items-center justify-center gap-2"

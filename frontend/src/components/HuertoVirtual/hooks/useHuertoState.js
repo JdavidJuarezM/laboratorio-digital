@@ -2,13 +2,13 @@
 
 import {useReducer, useEffect, useCallback, useRef} from "react";
 import useSound from "use-sound";
-import { getEstadoHuerto } from "../../../services/huertoService";
-import { GAME_CONFIG, WEATHER_TYPES } from "../../../constants/gameConfig";
-import { bancoDePreguntas as preguntasDefault } from "../../../constants/bancoDePreguntas";
-
+import {getEstadoHuerto} from "../../../services/huertoService";
+import {GAME_CONFIG, WEATHER_TYPES} from "../../../constants/gameConfig";
+import {bancoDePreguntas as preguntasDefault} from "../../../constants/bancoDePreguntas";
+import { bancoDePreguntas } from "../../../constants/bancoDePreguntas";
 // Servicios para conectar con la BD
-import { actualizarProgresoAlumno, getAlumnos } from "../../../services/alumnosService";
-import { getPreguntas } from "../../../services/preguntasService";
+import {actualizarProgresoAlumno, getAlumnos} from "../../../services/alumnosService";
+import {getPreguntas} from "../../../services/preguntasService";
 
 const initialState = {
     etapa: 0,
@@ -36,7 +36,7 @@ function gameReducer(state, action) {
             return {...state, isLoading: false, error: action.payload};
 
         case "SET_BANCO_PREGUNTAS":
-            return { ...state, bancoPreguntas: action.payload };
+            return {...state, bancoPreguntas: action.payload};
 
         case "GAME_TICK": {
             const currentWeather = Object.values(WEATHER_TYPES).find(w => w.id === state.clima) || WEATHER_TYPES.SUNNY;
@@ -81,13 +81,17 @@ function gameReducer(state, action) {
         }
 
         case "SHOW_QUESTION": {
-            if (state.preguntaActual || state.respuestasCorrectas >= 3) return state;
-
-            // Usamos el banco cargado de la BD o el default si no hay
+            // 1. Primero determinamos cuántas preguntas hay en TOTAL para esta etapa
             const banco = state.bancoPreguntas || preguntasDefault;
+            const preguntasDeEstaEtapa = banco[state.etapa] || [];
+            // Si hay preguntas personalizadas usamos su cantidad, si no, el default es 3
+            const limitePreguntas = preguntasDeEstaEtapa.length > 0 ? preguntasDeEstaEtapa.length : 3;
 
-            // Buscamos preguntas de la etapa actual que no se hayan hecho
-            const preguntasDisponibles = (banco[state.etapa] || []).filter(
+            // 2. Usamos ese límite dinámico en la condición de parada
+            if (state.preguntaActual || state.respuestasCorrectas >= limitePreguntas) return state;
+
+            // 3. Buscamos preguntas disponibles (que no se hayan hecho)
+            const preguntasDisponibles = preguntasDeEstaEtapa.filter(
                 (p) => !state.preguntasHechas.includes(p.pregunta)
             );
 
@@ -103,7 +107,6 @@ function gameReducer(state, action) {
             }
             return state;
         }
-
         case "ANSWER_QUESTION": {
             const esCorrecta = action.payload.esCorrecta;
 
@@ -169,7 +172,7 @@ export const useHuertoState = (juegoIniciado) => {
                     // A. Cargar preguntas de la BD
                     const preguntasBD = await getPreguntas();
                     if (preguntasBD) {
-                        dispatch({ type: "SET_BANCO_PREGUNTAS", payload: preguntasBD });
+                        dispatch({type: "SET_BANCO_PREGUNTAS", payload: preguntasBD});
                     }
 
                     // B. Cargar progreso del alumno
@@ -179,13 +182,15 @@ export const useHuertoState = (juegoIniciado) => {
                         const alumno = listaAlumnos.find(a => a.id.toString() === studentId);
 
                         if (alumno) {
-                            dispatch({type: "SET_INITIAL_STATE", payload: {
-                                etapa: alumno.etapa,
-                                respuestasCorrectas: alumno.aciertos,
-                                agua: GAME_CONFIG.INITIAL_RESOURCE_LEVEL,
-                                sol: GAME_CONFIG.INITIAL_RESOURCE_LEVEL,
-                                clima: initialState.clima
-                            }});
+                            dispatch({
+                                type: "SET_INITIAL_STATE", payload: {
+                                    etapa: alumno.etapa,
+                                    respuestasCorrectas: alumno.aciertos,
+                                    agua: GAME_CONFIG.INITIAL_RESOURCE_LEVEL,
+                                    sol: GAME_CONFIG.INITIAL_RESOURCE_LEVEL,
+                                    clima: initialState.clima
+                                }
+                            });
                         } else {
                             dispatch({type: "SET_INITIAL_STATE", payload: {...initialState, isLoading: false}});
                         }
@@ -259,20 +264,31 @@ export const useHuertoState = (juegoIniciado) => {
     // 5. Lógica de Crecimiento
     useEffect(() => {
         if (juegoIniciado && !estado.isLoading) {
-            const {etapa, agua, sol, respuestasCorrectas, preguntaActual} = estado;
+            const {etapa, agua, sol, respuestasCorrectas, preguntaActual, bancoPreguntas} = estado;
             const enRango = (n) => n >= GAME_CONFIG.GROWTH_THRESHOLD.MIN && n <= GAME_CONFIG.GROWTH_THRESHOLD.MAX;
 
-            if (etapa < GAME_CONFIG.MAX_PLANT_STAGE && enRango(agua) && enRango(sol) && respuestasCorrectas >= 3) {
+            // --- CAMBIO: Calcular el objetivo dinámicamente ---
+            const banco = bancoPreguntas || bancoDePreguntas;
+            // Si no hay preguntas definidas para esta etapa, asumimos 3 por defecto para no romper
+            const preguntasDeEstaEtapa = banco[etapa] || [];
+            const objetivoAciertos = preguntasDeEstaEtapa.length > 0 ? preguntasDeEstaEtapa.length : 3;
+
+            // Verificamos si alcanzó el objetivo dinámico
+            if (etapa < GAME_CONFIG.MAX_PLANT_STAGE && enRango(agua) && enRango(sol) && respuestasCorrectas >= objetivoAciertos) {
                 dispatch({type: "ADVANCE_STAGE"});
                 playCrecimiento();
                 setTimeout(() => dispatch({type: "HIDE_CELEBRATION"}), 4000);
             }
 
+            // Lanzar pregunta si no ha completado el objetivo
             if (!preguntaActual && !estado.etapaCelebracion && (agua >= 100 || sol >= 100)) {
-                dispatch({type: "SHOW_QUESTION"});
+                // Solo lanzamos si aún no ha completado todas las preguntas
+                if (respuestasCorrectas < objetivoAciertos) {
+                    dispatch({type: "SHOW_QUESTION"});
+                }
             }
         }
-    }, [estado.agua, estado.sol, estado.respuestasCorrectas, estado.etapa, estado.preguntaActual, estado.etapaCelebracion, estado.isLoading, playCrecimiento, juegoIniciado]);
+    }, [estado.agua, estado.sol, estado.respuestasCorrectas, estado.etapa, estado.preguntaActual, estado.etapaCelebracion, estado.isLoading, playCrecimiento, juegoIniciado, estado.bancoPreguntas]); // Agregamos estado.bancoPreguntas a dependencias
 
     const acciones = {
         soltarHerramienta: useCallback(() => {

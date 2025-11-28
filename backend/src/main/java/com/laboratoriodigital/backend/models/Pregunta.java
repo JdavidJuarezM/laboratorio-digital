@@ -14,7 +14,7 @@ public class Pregunta {
 
     private Integer etapa;
 
-    @Column(length = 500) // Permitir preguntas largas
+    @Column(length = 500)
     private String pregunta;
 
     @ElementCollection(fetch = FetchType.EAGER)
@@ -23,6 +23,10 @@ public class Pregunta {
     private List<String> opciones;
 
     private String correcta;
+
+    // --- CAMBIO: Campo habilitada ---
+    @Column(nullable = false, columnDefinition = "BOOLEAN DEFAULT TRUE")
+    private Boolean habilitada = true;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "maestro_id", nullable = false)
@@ -44,4 +48,8 @@ public class Pregunta {
     public void setCorrecta(String correcta) { this.correcta = correcta; }
     public Maestro getMaestro() { return maestro; }
     public void setMaestro(Maestro maestro) { this.maestro = maestro; }
+
+    // Getters/Setters nuevos
+    public Boolean getHabilitada() { return habilitada; }
+    public void setHabilitada(Boolean habilitada) { this.habilitada = habilitada; }
 }

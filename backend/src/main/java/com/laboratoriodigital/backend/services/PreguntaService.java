@@ -25,7 +25,6 @@ public class PreguntaService {
         Maestro maestro = maestroService.getCurrentMaestro();
         List<Pregunta> lista = preguntaRepository.findByMaestro(maestro);
 
-        // Convertimos la lista plana a la estructura { 0: [...], 1: [...] } que usa el frontend
         Map<Integer, List<Map<String, Object>>> estructura = new HashMap<>();
 
         for (Pregunta p : lista) {
@@ -34,6 +33,8 @@ public class PreguntaService {
             dto.put("pregunta", p.getPregunta());
             dto.put("opciones", p.getOpciones());
             dto.put("correcta", p.getCorrecta());
+            // --- CAMBIO: Enviamos el estado habilitada ---
+            dto.put("habilitada", p.getHabilitada());
             estructura.get(p.getEtapa()).add(dto);
         }
         return estructura;
@@ -42,11 +43,8 @@ public class PreguntaService {
     @Transactional
     public void guardarTodo(Map<String, List<PreguntaDTO>> payload) {
         Maestro maestro = maestroService.getCurrentMaestro();
-
-        // 1. Limpiamos las preguntas anteriores de este maestro para sobrescribir
         preguntaRepository.deleteByMaestro(maestro);
 
-        // 2. Guardamos las nuevas
         List<Pregunta> nuevas = new ArrayList<>();
 
         payload.forEach((key, listaPreguntas) -> {
@@ -57,6 +55,8 @@ public class PreguntaService {
                 p.setPregunta(dto.getPregunta());
                 p.setOpciones(dto.getOpciones());
                 p.setCorrecta(dto.getCorrecta());
+                // --- CAMBIO: Guardamos el estado (default true) ---
+                p.setHabilitada(dto.getHabilitada() != null ? dto.getHabilitada() : true);
                 p.setMaestro(maestro);
                 nuevas.add(p);
             }
@@ -65,11 +65,12 @@ public class PreguntaService {
         preguntaRepository.saveAll(nuevas);
     }
 
-    // DTO interno para recibir datos
+    // DTO actualizado
     public static class PreguntaDTO {
         private String pregunta;
         private List<String> opciones;
         private String correcta;
+        private Boolean habilitada; // --- CAMBIO ---
 
         public String getPregunta() { return pregunta; }
         public void setPregunta(String p) { this.pregunta = p; }
@@ -77,5 +78,7 @@ public class PreguntaService {
         public void setOpciones(List<String> o) { this.opciones = o; }
         public String getCorrecta() { return correcta; }
         public void setCorrecta(String c) { this.correcta = c; }
+        public Boolean getHabilitada() { return habilitada; }
+        public void setHabilitada(Boolean h) { this.habilitada = h; }
     }
 }
