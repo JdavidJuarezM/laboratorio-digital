@@ -1,6 +1,8 @@
 // client/src/components/Supermercado/constants/gameData.js
 
 export const PRODUCTS = [
+  // ... (MANTÉN TU LISTA DE PRODUCTOS IGUAL QUE ANTES) ...
+  // --- Copia aquí la lista de PRODUCTS que ya tenías ---
   // --- Frutas y Verduras ---
   { id: 1, name: "Kilo de Manzana", price: 32.5, emoji: "🍎", categoria: "Frutas y Verduras" },
   { id: 2, name: "Kilo de Plátano", price: 22.9, emoji: "🍌", categoria: "Frutas y Verduras" },
@@ -65,32 +67,32 @@ export const PRODUCTS = [
 ];
 
 export const DIFFICULTY_SETTINGS = {
-    easy: {
-        items: [3, 5],
-        quantityRange: [2, 8],
-        questions: ["addition", "multiplication"]
-    },
-    normal: {
-        items: [5, 8],
-        quantityRange: [2, 11],
-        questions: ["multiplication", "addition", "subtraction"]
-    },
-    hard: {
-        items: [8, 15],
-        quantityRange: [2, 13],
-        questions: ["multiplication", "subtraction", "percentage"]
-    },
-    extreme: {
-        items: [16, 21],
-        quantityRange: [2, 46],
-        questions: ["multiplication", "percentage", "division"]
-    },
+  easy: {
+    items: [3, 5],
+    quantityRange: [1, 2], // Cantidades pequeñas
+    questions: ["addition", "subtraction"] // Solo suma y resta
+  },
+  normal: {
+    items: [5, 8],
+    quantityRange: [2, 5],
+    questions: ["addition", "subtraction", "multiplication"] // Se agrega multiplicación
+  },
+  hard: {
+    items: [8, 12],
+    quantityRange: [3, 8],
+    questions: ["addition", "subtraction", "multiplication", "division"] // Se agrega división
+  },
+  extreme: {
+    items: [10, 15],
+    quantityRange: [5, 12],
+    questions: ["addition", "subtraction", "multiplication", "division", "percentage"] // Se agregan porcentajes
+  },
 };
 
 export const ICONS = {
-    addition: "➕",
-    subtraction: "➖",
-    multiplication: "✖️",
-    division: "➗",
-    percentage: "٪",
+  addition: "➕",
+  subtraction: "➖",
+  multiplication: "✖️",
+  division: "➗",
+  percentage: "%",
 };

@@ -1,5 +1,4 @@
 import { useReducer, useCallback, useEffect, useState } from "react";
-// Importamos los productos locales que servirán de "Stock Base"
 import { PRODUCTS, DIFFICULTY_SETTINGS } from "../constants/gameData";
 import { getProductos } from "../../../services/productosService";
 import {
@@ -75,29 +74,22 @@ const useSupermercado = () => {
   const [products, setProducts] = useState([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
 
-  // Cargar productos: Stock Local (50) + Base de Datos (Personalizados)
+  // Cargar productos
   useEffect(() => {
     const loadData = async () => {
       try {
-        // 1. Obtener productos personalizados de la BD
         const dbData = await getProductos();
-
         let customProducts = [];
         if (dbData && dbData.length > 0) {
-          // Mapeamos y asignamos un ID alto para evitar conflictos con los IDs 1-50 locales
           customProducts = dbData.map(p => ({
-            id: p.id + 10000, // ID Offset: 1 en BD será 10001 en el juego
+            id: p.id + 10000,
             name: p.nombre,
             price: p.precio,
             emoji: p.emoji,
             categoria: p.categoria || "Personalizados"
           }));
         }
-
-        // 2. Combinar: Stock Fijo + Personalizados
-        // De esta forma siempre hay al menos 50 productos
         setProducts([...PRODUCTS, ...customProducts]);
-
       } catch (error) {
         console.error("Error conectando con API, usando solo stock local:", error);
         setProducts(PRODUCTS);
@@ -128,7 +120,6 @@ const useSupermercado = () => {
       if (state.gameState === "welcome") initAudio();
       playClickSound();
 
-      // Protección: Si por alguna razón products está vacío, recargar desde local
       let availableProducts = [...products];
       if (availableProducts.length === 0) {
          availableProducts = [...PRODUCTS];
@@ -137,8 +128,9 @@ const useSupermercado = () => {
       const difficulty = newDifficulty || state.difficulty;
       const settings = DIFFICULTY_SETTINGS[difficulty];
       const [min, max] = settings ? settings.items : [3, 5];
-      const numItems = Math.floor(Math.random() * (max - min + 1)) + min;
+      const qtyRange = settings ? settings.quantityRange : [1, 3];
 
+      const numItems = Math.floor(Math.random() * (max - min + 1)) + min;
       const newShoppingList = {};
       const productsPool = [...availableProducts];
 
@@ -146,7 +138,10 @@ const useSupermercado = () => {
         if (productsPool.length === 0) break;
         const productIndex = Math.floor(Math.random() * productsPool.length);
         const product = productsPool[productIndex];
-        const quantity = 1 + Math.floor(Math.random() * 3);
+
+        // Cantidad basada en la dificultad
+        const quantity = Math.floor(Math.random() * (qtyRange[1] - qtyRange[0] + 1)) + qtyRange[0];
+
         newShoppingList[product.id] = { ...product, quantity };
         productsPool.splice(productIndex, 1);
       }
@@ -173,22 +168,65 @@ const useSupermercado = () => {
         return;
       }
 
-      const { quantity: neededQuantity, price } = state.shoppingList[product.id];
-      const itemCost = price * neededQuantity;
-      const question = `Necesitas ${neededQuantity} ${product.name}. Si cada uno cuesta $${price.toFixed(2)}, ¿cuánto es el total?`;
-      const answer = parseFloat(itemCost.toFixed(2));
+      const { quantity, price } = state.shoppingList[product.id];
+
+      // Lógica de Preguntas según Dificultad
+      const settings = DIFFICULTY_SETTINGS[state.difficulty];
+      const allowedTypes = settings ? settings.questions : ["multiplication"];
+      const type = allowedTypes[Math.floor(Math.random() * allowedTypes.length)];
+
+      let question = "";
+      let answer = 0;
+
+      switch (type) {
+        case "addition": {
+          const extra = Math.floor(Math.random() * 5) + 1; // Un pequeño cargo extra
+          question = `El precio es $${price.toFixed(2)}. Si te cobran $${extra} por el empaque, ¿cuánto pagas por una unidad?`;
+          answer = price + extra;
+          break;
+        }
+        case "subtraction": {
+          const discount = Math.floor(Math.random() * (price / 2)) + 1;
+          question = `El precio es $${price.toFixed(2)}. Tienes un cupón de $${discount}. ¿Cuánto pagas por una unidad?`;
+          answer = price - discount;
+          break;
+        }
+        case "multiplication": {
+          question = `Necesitas ${quantity} unidades de ${product.name}. Si cada una cuesta $${price.toFixed(2)}, ¿cuál es el total?`;
+          answer = price * quantity;
+          break;
+        }
+        case "division": {
+          // Generamos el total para que el usuario encuentre el unitario
+          const totalDiv = price * quantity;
+          question = `Pagaste $${totalDiv.toFixed(2)} por ${quantity} unidades de ${product.name}. ¿Cuánto costó cada una?`;
+          answer = price;
+          break;
+        }
+        case "percentage": {
+          const percent = [10, 20, 25, 50][Math.floor(Math.random() * 4)];
+          const discountAmount = (price * percent) / 100;
+          question = `El precio es $${price.toFixed(2)}. Hoy tiene un ${percent}% de descuento. ¿Cuánto dinero te ahorras por unidad?`;
+          answer = discountAmount;
+          break;
+        }
+        default:
+          question = `¿Cuánto es ${price} x ${quantity}?`;
+          answer = price * quantity;
+      }
 
       dispatch({
         type: "OPEN_QUESTION_MODAL",
-        payload: { product, question, answer, type: "multiplication" },
+        payload: { product, question, answer: parseFloat(answer.toFixed(2)), type },
       });
     },
-    [state.shoppingList, state.cart, showMessage]
+    [state.shoppingList, state.cart, showMessage, state.difficulty]
   );
 
   const handleAnswerSubmit = useCallback(
     (userAnswer) => {
       if (!state.currentQuestion) return;
+      // Margen de error pequeño para flotantes
       const isCorrect = Math.abs(parseFloat(userAnswer) - state.currentQuestion.answer) < 0.1;
 
       if (isCorrect) {
