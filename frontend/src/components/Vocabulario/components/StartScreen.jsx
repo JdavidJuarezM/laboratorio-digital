@@ -1,165 +1,158 @@
-// src/components/Vocabulario/components/StartScreen.jsx
-// src/components/Vocabulario/components/StartScreen.jsx
-
-import React from "react";
+// frontend/src/components/Vocabulario/components/StartScreen.jsx
+import React, { useState } from "react";
 import { initAudio } from "../services/ttsService";
+import VocabularioTeacherPanel from "./VocabularioTeacherPanel";
 
 const StartScreen = ({
   startGame,
   settings,
   setSettings,
-  highScore,
   onHelp,
 }) => {
+  const [showTeacherPanel, setShowTeacherPanel] = useState(false);
+
   const handleStartClick = () => {
-    initAudio(); // Asegura que el audio se inicie con el primer clic del usuario
+    initAudio();
     startGame();
   };
 
+  const categories = [
+    "Todas", "Animales", "Comida", "Naturaleza",
+    "Objetos", "Ropa", "Cuerpo", "Transporte",
+    "Personajes", "Instrumentos"
+  ];
+
   return (
-    <div className="card p-4 xs:p-6 sm:p-8 w-full max-w-md sm:max-w-lg text-center border-purple-500 bg-white rounded-2xl shadow-xl flex flex-col">
-      <h1 className="text-3xl xs:text-4xl sm:text-5xl font-bold text-blue-800 mb-2 sm:mb-4 drop-shadow-lg">
-        Juego de Vocabulario
-      </h1>
-      <p className="text-base sm:text-lg text-gray-700 mb-4 sm:mb-6">
-        ¡Aprende nuevas palabras de forma divertida!
-      </p>
+    <>
+      <VocabularioTeacherPanel
+        isOpen={showTeacherPanel}
+        onClose={() => setShowTeacherPanel(false)}
+      />
 
-      {/* --- SECCIÓN DE ENTRADA DE NOMBRE --- */}
-      <div className="w-full text-left mb-4 sm:mb-6">
-        <label
-          htmlFor="player-name"
-          className="block text-base sm:text-lg font-semibold text-gray-700 mb-1 sm:mb-2"
-        >
-          Tu nombre:
-        </label>
-        <input
-          type="text"
-          id="player-name"
-          placeholder="Escribe tu nombre aquí"
-          value={settings.playerName}
-          onChange={(e) =>
-            setSettings((prev) => ({ ...prev, playerName: e.target.value }))
-          }
-          className="w-full p-2 sm:p-3 text-base sm:text-lg rounded-lg border-2 border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
-        />
-      </div>
+      {/* Contenedor principal: Centrado y con padding seguro */}
+      <div className="w-full h-full flex items-center justify-center p-2 md:p-4">
 
-      {/* --- SECCIÓN DE DIFICULTAD --- */}
-      <div className="w-full text-left mb-4 sm:mb-8">
-        <label className="block text-base sm:text-lg font-semibold text-gray-700 mb-1 sm:mb-2">
-          Selecciona la dificultad:
-        </label>
-        <div className="flex flex-wrap justify-around gap-2 sm:gap-3">
-          {["easy", "medium", "hard"].map((level) => (
-            <label
-              key={level}
-              className={`flex-1 min-w-[80px] sm:min-w-[100px] flex items-center justify-center cursor-pointer p-2 sm:p-3 rounded-xl border-2 transition-all duration-200
-                                        ${
-                                          settings.difficulty === level
-                                            ? `bg-${
-                                                level === "easy"
-                                                  ? "green"
-                                                  : level === "medium"
-                                                  ? "yellow"
-                                                  : "red"
-                                              }-100 border-${
-                                                level === "easy"
-                                                  ? "green"
-                                                  : level === "medium"
-                                                  ? "yellow"
-                                                  : "red"
-                                              }-500 shadow-md`
-                                            : "bg-gray-100 border-gray-300 hover:border-gray-400"
-                                        }`}
+        {/* Tarjeta: Altura ajustada para evitar scroll (max-h-[90vh]) */}
+        <div className="card w-full max-w-5xl max-h-[90vh] bg-white rounded-[2rem] shadow-2xl flex flex-col relative overflow-hidden border-4 border-white">
+
+          {/* Encabezado Compacto */}
+          <div className="bg-blue-500 py-4 px-6 text-center relative shrink-0 shadow-md z-10">
+            <h1 className="text-3xl md:text-5xl font-black text-white drop-shadow-md tracking-wide">
+              Juego de Vocabulario
+            </h1>
+            <p className="text-blue-100 text-sm md:text-lg mt-1 font-medium">
+              ¡Aprende nuevas palabras jugando!
+            </p>
+
+            <button
+              onClick={() => setShowTeacherPanel(true)}
+              className="absolute top-4 right-4 text-blue-200 hover:text-white text-2xl transition-colors bg-blue-600/50 p-2 rounded-full hover:bg-blue-600"
+              title="Panel de Maestro"
             >
-              <input
-                type="radio"
-                name="difficulty"
-                value={level}
-                checked={settings.difficulty === level}
-                onChange={(e) =>
-                  setSettings((prev) => ({
-                    ...prev,
-                    difficulty: e.target.value,
-                  }))
-                }
-                className="sr-only"
-              />
-              <span
-                className={`text-base sm:text-lg font-bold ${
-                  settings.difficulty === level
-                    ? `text-${
-                        level === "easy"
-                          ? "green"
-                          : level === "medium"
-                          ? "yellow"
-                          : "red"
-                      }-700`
-                    : "text-gray-600"
-                }`}
+              ⚙️
+            </button>
+          </div>
+
+          {/* Cuerpo Flexible: Se ajusta al espacio restante */}
+          <div className="flex-1 flex flex-col p-4 md:p-6 overflow-y-auto">
+
+            <div className="w-full max-w-4xl mx-auto flex flex-col gap-4 md:gap-6 justify-center h-full">
+
+              {/* Grid de Opciones (Categoría y Dificultad lado a lado en PC) */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
+
+                {/* Categoría */}
+                <div className="text-left flex flex-col justify-center">
+                  <label className="block text-lg font-bold text-gray-700 mb-2 flex items-center gap-2">
+                    <span>📂</span> Categoría
+                  </label>
+                  <select
+                    value={settings.category || "Todas"}
+                    onChange={(e) => setSettings(prev => ({ ...prev, category: e.target.value }))}
+                    className="w-full p-3 rounded-xl border-2 border-gray-200 bg-gray-50 text-gray-700 font-bold text-base focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all cursor-pointer shadow-sm"
+                  >
+                    {categories.map(cat => (
+                      <option key={cat} value={cat}>{cat}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Dificultad */}
+                <div className="text-left">
+                  <label className="block text-lg font-bold text-gray-700 mb-2 flex items-center gap-2">
+                    <span>⚡</span> Dificultad
+                  </label>
+                  <div className="flex gap-2 h-[50px] md:h-[60px]">
+                    {["easy", "medium", "hard"].map((level) => (
+                      <label
+                        key={level}
+                        className={`flex-1 cursor-pointer rounded-xl border-2 transition-all duration-200 flex flex-col items-center justify-center px-1
+                          ${settings.difficulty === level
+                            ? `bg-${level === "easy" ? "green" : level === "medium" ? "yellow" : "red"}-100 border-${level === "easy" ? "green" : level === "medium" ? "yellow" : "red"}-500 shadow-md transform -translate-y-1`
+                            : "bg-white border-gray-200 hover:border-gray-400 hover:bg-gray-50"
+                          }`}
+                      >
+                        <input
+                          type="radio"
+                          name="difficulty"
+                          value={level}
+                          checked={settings.difficulty === level}
+                          onChange={(e) => setSettings((prev) => ({ ...prev, difficulty: e.target.value }))}
+                          className="sr-only"
+                        />
+                        <span className={`text-xs md:text-sm font-black uppercase tracking-wide ${
+                             settings.difficulty === level ? 'text-gray-800' : 'text-gray-400'
+                          }`}>
+                            {level === "easy" ? "Fácil" : level === "medium" ? "Medio" : "Difícil"}
+                          </span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Switch Timer (Más compacto) */}
+              <div
+                className="bg-blue-50 p-3 rounded-xl border-2 border-blue-100 flex justify-between items-center cursor-pointer hover:bg-blue-100 transition-colors shadow-sm group"
+                onClick={() => setSettings(prev => ({...prev, timerEnabled: !prev.timerEnabled}))}
               >
-                {level === "easy"
-                  ? "Fácil"
-                  : level === "medium"
-                  ? "Normal"
-                  : "Difícil"}
-              </span>
-            </label>
-          ))}
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl group-hover:scale-110 transition-transform">⏳</span>
+                  <div>
+                    <span className="block text-base font-bold text-blue-900">Jugar contra reloj</span>
+                    <span className="text-xs text-blue-600 font-medium">¿Te atreves con el tiempo límite?</span>
+                  </div>
+                </div>
+                <div className={`w-12 h-7 rounded-full p-1 transition-colors duration-300 ${settings.timerEnabled ? 'bg-blue-500' : 'bg-gray-300'}`}>
+                  <div className={`bg-white w-5 h-5 rounded-full shadow-md transform transition-transform duration-300 ${settings.timerEnabled ? 'translate-x-5' : 'translate-x-0'}`}></div>
+                </div>
+              </div>
+
+              {/* Botón Jugar */}
+              <button
+                onClick={handleStartClick}
+                className="group relative w-full bg-gradient-to-b from-purple-500 to-indigo-600 hover:from-purple-400 hover:to-indigo-500 text-white font-black py-4 md:py-5 px-6 rounded-2xl shadow-lg text-2xl md:text-4xl transition-all transform hover:scale-[1.01] active:scale-95 active:shadow-inner mt-2"
+              >
+                <span className="relative z-10 flex items-center justify-center gap-2">
+                  <span>🚀</span> ¡COMENZAR!
+                </span>
+                <div className="absolute inset-0 rounded-2xl bg-white/20 blur-md opacity-0 group-hover:opacity-100 transition-opacity"></div>
+              </button>
+
+              <div className="text-center">
+                 <button
+                  onClick={onHelp}
+                  className="text-gray-400 hover:text-blue-500 font-bold text-sm underline decoration-2 underline-offset-4 transition-colors"
+                >
+                  ¿Cómo se juega?
+                </button>
+              </div>
+
+            </div>
+          </div>
         </div>
       </div>
-
-      {/* --- INTERRUPTOR DE TEMPORIZADOR --- */}
-      <div className="w-full text-left mb-4 sm:mb-8 flex justify-between items-center bg-gray-100 p-3 sm:p-4 rounded-xl border-2 border-gray-300">
-        <span className="text-base sm:text-lg font-semibold text-gray-700">
-          Activar Temporizador
-        </span>
-        <label className="relative inline-flex items-center cursor-pointer">
-          <input
-            type="checkbox"
-            checked={settings.timerEnabled}
-            onChange={() =>
-              setSettings((prev) => ({
-                ...prev,
-                timerEnabled: !prev.timerEnabled,
-              }))
-            }
-            className="sr-only peer"
-          />
-          <div className="w-11 h-6 bg-gray-300 rounded-full peer peer-focus:ring-2 peer-focus:ring-blue-400 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-        </label>
-      </div>
-
-      {/* --- SECCIÓN DE PUNTUACIÓN MÁXIMA (SIN NOMBRE) --- */}
-      <div className="w-full mb-4 sm:mb-8 text-center bg-gray-100 p-3 sm:p-4 rounded-xl border-2 border-gray-300">
-        <h2 className="text-lg sm:text-xl font-bold text-gray-700 mb-1 sm:mb-2">
-          Mejor Puntuación
-        </h2>
-        <p className="text-xl xs:text-2xl text-purple-600 font-extrabold mb-0.5 sm:mb-1">
-          Puntos: {highScore.score}
-        </p>
-        <p className="text-base sm:text-lg text-indigo-600 font-semibold mb-0.5 sm:mb-1">
-          Racha: {highScore.streak}
-        </p>
-        {/* Aquí eliminé el bloque que mostraba (highScore.player) */}
-      </div>
-
-      {/* --- BOTONES DE ACCIÓN --- */}
-      <div className="flex-grow"></div>
-      <button
-        onClick={handleStartClick}
-        className="button bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white font-bold py-3 px-6 sm:py-4 sm:px-8 rounded-full shadow-lg text-lg sm:text-2xl w-full transition-transform transform hover:scale-105"
-      >
-        ¡Jugar ahora!
-      </button>
-      <button
-        onClick={onHelp}
-        className="mt-3 sm:mt-4 text-sm sm:text-base text-blue-500 hover:text-blue-700 font-semibold transition"
-      >
-        ¿Cómo se juega?
-      </button>
-    </div>
+    </>
   );
 };
 

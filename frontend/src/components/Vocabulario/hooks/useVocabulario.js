@@ -1,16 +1,14 @@
 // frontend/src/components/Vocabulario/hooks/useVocabulario.js
 
 import { useState, useEffect, useCallback, useRef } from "react";
-// Mantenemos useAuth solo para cargar el nombre inicial si quieres,
-// pero la lógica de guardado priorizará el input.
 import { useAuth } from "../../../context/AuthContext";
-import { words } from "../constants/wordList";
+import { words as defaultWords } from "../constants/wordList"; // Renombramos las estáticas
 import {
   audioEffects,
   initAudio,
   speakWord as speakWordService,
 } from "../services/ttsService";
-import { getHighScore, saveScore } from "../services/vocabularioService";
+import { getHighScore, saveScore, getPalabras } from "../services/vocabularioService"; // Importamos getPalabras
 
 const shuffle = (array) => {
   const newArray = [...array];
@@ -25,16 +23,19 @@ export const useVocabulario = () => {
   const { user } = useAuth();
 
   const [gameState, setGameState] = useState("start");
+
+  // Modificado: Se elimina playerName y se agrega category
   const [settings, setSettings] = useState({
-    playerName: "",
     difficulty: "easy",
+    category: "Todas",
     timerEnabled: true,
   });
+
   const [highScore, setHighScore] = useState({
     score: 0,
     streak: 0,
-    player: "",
   });
+
   const [gameStats, setGameStats] = useState({
     wordsCompleted: 0,
     points: 0,
@@ -42,6 +43,7 @@ export const useVocabulario = () => {
     longestStreak: 0,
     attempts: 0,
   });
+
   const [currentWord, setCurrentWord] = useState(null);
   const [wordsAvailable, setWordsAvailable] = useState([]);
   const [userInput, setUserInput] = useState([]);
@@ -51,10 +53,11 @@ export const useVocabulario = () => {
     message: "",
     type: "",
   });
+
   const timerIntervalRef = useRef(null);
   const hasTimeExpired = useRef(false);
 
-  // Cargar HighScore inicial (Aquí sí usamos el de la cuenta o "Tú" como placeholder)
+  // Cargar HighScore inicial
   useEffect(() => {
     const loadScore = async () => {
       const data = await getHighScore();
@@ -62,34 +65,11 @@ export const useVocabulario = () => {
         setHighScore({
           score: data.highScore || 0,
           streak: data.streak || 0,
-          player: user?.nombre || "Tú",
         });
       }
     };
     loadScore();
   }, [user]);
-
-  // --- AQUÍ ESTÁ LA CORRECCIÓN ---
-  const handleSaveHighScore = useCallback(() => {
-    const { points, longestStreak } = gameStats;
-
-    // Usamos el nombre que el usuario escribió en el input.
-    // Si lo dejó vacío, usamos "Anónimo" o el de la cuenta.
-    const nombreJugador = settings.playerName.trim() || user?.nombre || "Anónimo";
-
-    if (points > highScore.score) {
-      // Guardamos en el backend (se vincula a la cuenta logueada)
-      saveScore(points, longestStreak).catch(err => console.error(err));
-
-      // Actualizamos el estado visual con el NOMBRE DEL INPUT
-      setHighScore((prev) => ({
-        ...prev,
-        score: points,
-        streak: longestStreak,
-        player: nombreJugador, // <--- Este es el cambio que pediste
-      }));
-    }
-  }, [gameStats, highScore, settings.playerName, user]); // Agregamos settings.playerName a dependencias
 
   const getTimerForDifficulty = useCallback(() => {
     switch (settings.difficulty) {
@@ -105,6 +85,19 @@ export const useVocabulario = () => {
     setTimeout(() => setFloatingFeedback({ message: "", type: "" }), 1500);
   };
 
+  // Guardado silencioso al terminar
+  const handleSaveHighScore = useCallback(() => {
+    const { points, longestStreak } = gameStats;
+    if (points > highScore.score) {
+      saveScore(points, longestStreak).catch(err => console.error("Error guardando score:", err));
+      setHighScore((prev) => ({
+        ...prev,
+        score: points,
+        streak: longestStreak,
+      }));
+    }
+  }, [gameStats, highScore]);
+
   const nextWord = useCallback(() => {
     clearInterval(timerIntervalRef.current);
     hasTimeExpired.current = false;
@@ -112,7 +105,7 @@ export const useVocabulario = () => {
     if (wordsAvailable.length === 0) {
       setGameState("end");
       audioEffects.playGameOver();
-      handleSaveHighScore(); // Al terminar llama a la función corregida
+      handleSaveHighScore();
       return;
     }
 
@@ -143,7 +136,8 @@ export const useVocabulario = () => {
     getTimerForDifficulty,
   ]);
 
-  const startGame = useCallback(() => {
+  // --- Lógica de Inicio Actualizada (Carga Dinámica y Filtro) ---
+  const startGame = useCallback(async () => {
     initAudio();
     setGameStats({
       wordsCompleted: 0,
@@ -152,22 +146,59 @@ export const useVocabulario = () => {
       longestStreak: 0,
       attempts: 0,
     });
-    const filteredWords = words.filter(
-      (w) => w.difficulty === settings.difficulty
-    );
-    const available = shuffle(filteredWords).slice(0, 10);
 
-    setWordsAvailable(available);
-    setCurrentWord(null);
-    setGameState("playing");
-  }, [settings.difficulty]);
+    try {
+        // 1. Obtener palabras del backend
+        const dynamicWords = await getPalabras();
 
+        // 2. Mapear al formato del juego
+        const mappedDynamic = dynamicWords.map(w => ({
+            word: w.palabra,
+            image: w.imagenUrl,
+            difficulty: w.dificultad,
+            category: w.categoria
+        }));
+
+        // 3. Combinar con las palabras por defecto
+        const allWords = [...defaultWords, ...mappedDynamic];
+
+        // 4. Filtrar por Dificultad Y Categoría
+        const filteredWords = allWords.filter((w) => {
+            const difficultyMatch = w.difficulty === settings.difficulty;
+            // Si la categoría es "Todas", incluimos todo lo que coincida en dificultad
+            const categoryMatch = settings.category === "Todas" || w.category === settings.category;
+            return difficultyMatch && categoryMatch;
+        });
+
+        // Fallback: Si el filtro deja 0 palabras, usamos al menos las que coincidan en dificultad
+        const finalList = filteredWords.length > 0
+            ? filteredWords
+            : allWords.filter(w => w.difficulty === settings.difficulty);
+
+        // Mezclar y tomar 10
+        const available = shuffle(finalList).slice(0, 10);
+
+        setWordsAvailable(available);
+        setCurrentWord(null);
+        setGameState("playing");
+
+    } catch (error) {
+        console.error("Error al iniciar juego:", error);
+        // Fallback en caso de error de red
+        const fallbackWords = defaultWords.filter(w => w.difficulty === settings.difficulty);
+        setWordsAvailable(shuffle(fallbackWords).slice(0, 10));
+        setGameState("playing");
+    }
+  }, [settings.difficulty, settings.category]);
+
+  // Efecto para iniciar la primera palabra
   useEffect(() => {
     if (gameState === "playing" && !currentWord && wordsAvailable.length > 0) {
       nextWord();
     }
   }, [gameState, currentWord, wordsAvailable, nextWord]);
 
+  // Efecto del Temporizador
   useEffect(() => {
     if (
       timer === 0 &&
