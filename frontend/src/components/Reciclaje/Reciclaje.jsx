@@ -20,6 +20,7 @@ import PanelReciclaje from './PanelReciclaje';
 import './Reciclaje.css';
 import { useNavigate } from "react-router-dom";
 
+// Componente de Corazón
 const HeartIcon = ({ isLost }) => (
   <div className={`w-5 h-5 md:w-10 md:h-10 transition-all duration-500 ${isLost ? 'opacity-20 grayscale scale-75' : 'scale-110 drop-shadow-lg text-red-500'}`}>
     <svg viewBox="0 0 24 24" className="w-full h-full fill-current filter drop-shadow-sm">
@@ -37,16 +38,29 @@ const Reciclaje = () => {
   const MASTER_KEY = import.meta.env.VITE_TEACHER_CODE;
   const navigate = useNavigate();
 
+  // --- GESTIÓN DE AUDIO ---
   useEffect(() => {
     initReciclajeAudio();
-    return () => stopBackgroundMusic();
+
+    // AL SALIR DEL COMPONENTE (IR AL DASHBOARD U OTRO JUEGO)
+    return () => {
+      stopBackgroundMusic();
+    };
   }, []);
 
+  // AL CAMBIAR DE PESTAÑA O MINIMIZAR
   useEffect(() => {
     const handleVisibilityChange = () => {
-      if (document.hidden) pauseMusic();
-      else if (state.gameState === 'playing') resumeMusic();
+      if (document.hidden) {
+        pauseMusic(); // Silenciar si no se ve
+      } else {
+        // Solo reanudar si estábamos jugando activamente
+        if (state.gameState === 'playing') {
+          resumeMusic();
+        }
+      }
     };
+
     document.addEventListener("visibilitychange", handleVisibilityChange);
     return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
   }, [state.gameState]);
@@ -141,21 +155,21 @@ const Reciclaje = () => {
         {/* 3. ÁREA DE JUEGO */}
         <main className="relative z-10 flex flex-col h-full pt-12 md:pt-20 pb-0 pointer-events-none justify-between">
 
-            {/* ZONA SUPERIOR - Más compacta en móvil */}
-            <div className="relative flex-1 w-full flex justify-center items-center pointer-events-none min-h-[40px] md:min-h-[150px]">
+            {/* ZONA SUPERIOR (EcoBot) - Reducida en móvil */}
+            <div className="relative flex-1 w-full flex justify-center items-center pointer-events-none min-h-[50px] md:min-h-[150px]">
                  <div className="absolute right-2 top-2 md:right-16 md:top-8 pointer-events-auto animate-float">
-                    <div className="w-12 h-12 md:w-32 md:h-32 drop-shadow-2xl filter hover:brightness-110 transition-all cursor-help">
+                    <div className="w-14 h-14 md:w-32 md:h-32 drop-shadow-2xl filter hover:brightness-110 transition-all cursor-help">
                         <EcoBot message={state.botMessage} expression={state.botExpression} />
                     </div>
                  </div>
             </div>
 
-            {/* ZONA MEDIA: Cinta Transportadora */}
-            <div className="relative w-full flex justify-center pointer-events-auto z-20 mb-[-5px] md:mb-[-25px]">
+            {/* ZONA MEDIA: Cinta Transportadora - Más compacta en móvil */}
+            <div className="relative w-full flex justify-center pointer-events-auto z-20 mb-[-10px] md:mb-[-25px]">
                 <div
                     id="conveyorBelt"
                     className={`
-                        w-[95%] md:w-[80%] max-w-lg md:max-w-4xl h-20 md:h-48 
+                        w-[90%] md:w-[80%] max-w-lg md:max-w-4xl h-20 md:h-48 
                         bg-slate-800 rounded-2xl md:rounded-[2rem] border-b-4 md:border-b-8 border-slate-900 
                         shadow-[0_15px_30px_rgba(0,0,0,0.4)] 
                         relative flex items-center justify-center overflow-hidden
@@ -179,11 +193,11 @@ const Reciclaje = () => {
                 </div>
             </div>
 
-            {/* ZONA INFERIOR: Panel de Botes - GRID 2 COLUMNAS EN MÓVIL */}
-            <div className="w-full bg-white/30 backdrop-blur-lg border-t border-white/40 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] pointer-events-auto rounded-t-[1.5rem] md:rounded-t-[3rem] z-10 pb-2 pt-3 px-2 md:pb-8 md:pt-12 md:px-8">
-                <div className="max-w-full md:max-w-6xl mx-auto">
-                    {/* AQUÍ ESTÁ LA MAGIA: grid-cols-2 para móvil, grid-cols-6 para PC */}
-                    <div className="grid grid-cols-2 md:grid-cols-6 gap-2 md:gap-6">
+            {/* ZONA INFERIOR: Panel de Botes */}
+            <div className="w-full bg-white/30 backdrop-blur-lg border-t border-white/40 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] pointer-events-auto rounded-t-[1.5rem] md:rounded-t-[3rem] z-10 pb-2 md:pb-8 pt-4 md:pt-12 px-2 md:px-8">
+                <div className="max-w-lg md:max-w-full mx-auto">
+                    {/* En móvil: Grid de 3 columnas (2 filas). En PC: Grid de 6 columnas (1 fila) */}
+                    <div className="grid grid-cols-3 md:grid-cols-6 gap-2 md:gap-6">
                         {binData.map(bin => (
                             <div key={bin.id} className="relative group transition-transform active:scale-95">
                                 <Bote id={bin.id} label={bin.label} icon={bin.icon} color={bin.color} />
@@ -194,16 +208,27 @@ const Reciclaje = () => {
             </div>
         </main>
 
-        {/* ... (Modales sin cambios) ... */}
+        {/* --- MODALES --- */}
         {state.gameState === 'welcome' && <WelcomeModal onStart={startGame} />}
         {state.gameState === 'gameOver' && <GameOverModal score={state.score} highScore={state.highScore} stats={state.gameStats} onRestart={startGame} />}
-        {state.gameState === 'paused' && !showAdminLogin && !showPanel && <PauseModal onResume={togglePause} />}
+
+        {state.gameState === 'paused' && !showAdminLogin && !showPanel && (
+            <PauseModal onResume={togglePause} />
+        )}
+
         {showAdminLogin && (
           <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[10000] p-4 backdrop-blur-sm">
             <div className="bg-white p-6 rounded-3xl shadow-2xl w-full max-w-sm border-4 border-green-500 animate-bounce-in">
               <h3 className="text-xl font-bold mb-4 text-green-800 text-center">Acceso Maestro</h3>
               <form onSubmit={handleAdminAccess} className="space-y-4">
-                <input type="password" value={adminPassword} onChange={(e)=>setAdminPassword(e.target.value)} className="w-full border-2 border-gray-200 p-3 rounded-xl text-center outline-none focus:border-green-500" placeholder="Código..." autoFocus />
+                <input
+                  type="password"
+                  value={adminPassword}
+                  onChange={(e)=>setAdminPassword(e.target.value)}
+                  className="w-full border-2 border-gray-200 p-3 rounded-xl text-center outline-none focus:border-green-500"
+                  placeholder="Código..."
+                  autoFocus
+                />
                 <div className="flex gap-2">
                     <button type="button" onClick={handleCancelAdmin} className="flex-1 py-2 bg-gray-100 rounded-lg font-bold text-gray-500">Cancelar</button>
                     <button type="submit" className="flex-1 py-2 bg-green-600 text-white rounded-lg font-bold">Entrar</button>
@@ -212,8 +237,17 @@ const Reciclaje = () => {
             </div>
           </div>
         )}
-        {showPanel && <PanelReciclaje onClose={() => { setShowPanel(false); window.location.reload(); }} />}
+
+        {showPanel && (
+            <PanelReciclaje
+                onClose={() => {
+                    setShowPanel(false);
+                    window.location.reload();
+                }}
+            />
+        )}
       </div>
+
       <DragOverlay dropAnimation={{ duration: 200 }}>
         {activeItem ? <BasuraVisual item={activeItem} isDragging={true} className="scale-75 md:scale-110 drop-shadow-2xl cursor-grabbing" /> : null}
       </DragOverlay>
