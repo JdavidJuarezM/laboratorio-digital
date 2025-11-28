@@ -7,7 +7,7 @@ import { getPreguntas, guardarPreguntas } from "../../../services/preguntasServi
 
 // Configuración con variable de entorno
 const DEFAULT_CONFIG = {
-  codigoMaestro: import.meta.env.VITE_TEACHER_CODE || "PROFE123",
+  codigoMaestro: import.meta.env.VITE_TEACHER_CODE,
 };
 
 const TeacherPanel = ({ onClose, isOpen }) => {

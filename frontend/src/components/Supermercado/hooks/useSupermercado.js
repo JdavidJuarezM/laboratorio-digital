@@ -1,15 +1,14 @@
-// client/src/components/Supermercado/hooks/useSupermercado.js
-import { useReducer, useCallback, useEffect } from "react";
+import { useReducer, useCallback, useEffect, useState } from "react";
+// Importamos los productos locales que servirán de "Stock Base"
 import { PRODUCTS, DIFFICULTY_SETTINGS } from "../constants/gameData";
+import { getProductos } from "../../../services/productosService";
 import {
   initAudio,
-  playSound,
   playSuccessSound,
   playErrorSound,
   playClickSound,
+  playSound,
 } from "../services/soundService";
-// Asegúrate de que este archivo exista en la ruta correcta
-import { getHighScore, saveScore } from "../services/supermercadoService";
 
 const initialState = {
   gameState: "welcome",
@@ -17,126 +16,42 @@ const initialState = {
   cart: {},
   currentQuestion: null,
   score: 0,
-  highScore: 0,
-  streak: 0,
+  highScore: parseInt(localStorage.getItem("supermercadoHighScore") || "0", 10),
   difficulty: "normal",
-  isBudgetMode: false,
-  budget: 0,
-  budgetRemaining: 0,
-  lifelineUsed: false,
   isModalOpen: false,
   message: { text: "", type: "" },
 };
 
-// Función auxiliar corregida con llaves {} en los case
-const generateQuestion = (product, quantity, difficulty) => {
-  const settings = DIFFICULTY_SETTINGS[difficulty];
-  // Selecciona un tipo de pregunta aleatorio permitido
-  const type = settings.questions[Math.floor(Math.random() * settings.questions.length)];
-
-  const totalCost = product.price * quantity;
-  let questionText = "";
-  let answer = 0;
-
-  switch (type) {
-    case "addition": {
-      // AQUI AGREGUE LAS LLAVES { }
-      const increase = Math.floor(Math.random() * 10) + 1;
-      questionText = `El precio de ${product.name} subió $${increase}. Si costaba $${product.price}, ¿cuánto cuesta ahora uno solo?`;
-      answer = parseFloat((product.price + increase).toFixed(2));
-      break;
-    }
-
-    case "subtraction": {
-      // AQUI AGREGUE LAS LLAVES { }
-      const nextBill = Math.ceil(totalCost / 10) * 10 || 10;
-      const payAmount = nextBill === totalCost ? nextBill + 20 : nextBill;
-      questionText = `Vas a pagar $${totalCost.toFixed(2)} con un billete de $${payAmount}. ¿Cuánto cambio recibes?`;
-      answer = parseFloat((payAmount - totalCost).toFixed(2));
-      break;
-    }
-
-    case "percentage": {
-      // AQUI AGREGUE LAS LLAVES { }
-      const discounts = [10, 20, 50];
-      const discount = discounts[Math.floor(Math.random() * discounts.length)];
-      questionText = `¡Oferta! ${product.name} tiene un ${discount}% de descuento. El precio normal es $${product.price}. ¿Cuánto dinero te ahorras por unidad?`;
-      answer = parseFloat((product.price * (discount / 100)).toFixed(2));
-      break;
-    }
-
-    case "division": {
-       // AQUI AGREGUE LAS LLAVES { }
-       const friends = Math.floor(Math.random() * 3) + 2;
-       questionText = `Compras ${quantity} ${product.name} por $${totalCost.toFixed(2)} y lo pagas entre ${friends} amigos en partes iguales. ¿Cuánto paga cada uno?`;
-       answer = parseFloat((totalCost / friends).toFixed(2));
-       break;
-    }
-
-    case "multiplication":
-    default:
-      // Este no necesita llaves porque no declara const/let nuevas
-      questionText = `Necesitas ${quantity} ${product.name}. Si cada uno cuesta $${product.price.toFixed(2)}, ¿cuál es el costo total?`;
-      answer = parseFloat(totalCost.toFixed(2));
-      break;
-  }
-
-  return { question: questionText, answer, type, product };
-};
-
 function gameReducer(state, action) {
   switch (action.type) {
-    case "SET_HIGH_SCORE":
-      return { ...state, highScore: action.payload };
     case "START_GAME":
       return {
         ...initialState,
         gameState: "shopping",
         difficulty: action.payload.difficulty,
-        isBudgetMode: action.payload.isBudgetMode,
         highScore: state.highScore,
         shoppingList: action.payload.shoppingList,
-        budget: action.payload.budget,
-        budgetRemaining: action.payload.budget,
       };
     case "SET_DIFFICULTY":
       return { ...state, difficulty: action.payload };
-    case "SET_BUDGET_MODE":
-      return { ...state, isBudgetMode: action.payload };
     case "OPEN_QUESTION_MODAL":
       return { ...state, currentQuestion: action.payload, isModalOpen: true };
     case "CLOSE_MODAL":
       return { ...state, isModalOpen: false, currentQuestion: null };
     case "ANSWER_CORRECT": {
       const { product, points } = action.payload;
-
-      const streakBonus = Math.floor(state.streak / 3) * 5;
-      const totalPoints = points + streakBonus;
-
       const newCart = {
         ...state.cart,
         [product.id]: { ...state.shoppingList[product.id] },
       };
-
-      const newScore = state.score + totalPoints;
-      const itemCost = product.price * state.shoppingList[product.id].quantity;
-
+      const newScore = state.score + points;
       return {
         ...state,
         cart: newCart,
         score: newScore,
-        streak: state.streak + 1,
         highScore: Math.max(newScore, state.highScore),
-        budgetRemaining: state.isBudgetMode
-          ? state.budgetRemaining - itemCost
-          : state.budgetRemaining,
       };
     }
-    case "ANSWER_WRONG":
-      return {
-        ...state,
-        streak: 0,
-      };
     case "ADD_POINTS_AND_END": {
       const newScore = state.score + action.payload.points;
       return {
@@ -157,22 +72,45 @@ function gameReducer(state, action) {
 
 const useSupermercado = () => {
   const [state, dispatch] = useReducer(gameReducer, initialState);
+  const [products, setProducts] = useState([]);
+  const [loadingProducts, setLoadingProducts] = useState(true);
 
+  // Cargar productos: Stock Local (50) + Base de Datos (Personalizados)
   useEffect(() => {
-    const fetchScore = async () => {
-      const data = await getHighScore();
-      if (data && data.highScore !== undefined) {
-        dispatch({ type: "SET_HIGH_SCORE", payload: data.highScore });
+    const loadData = async () => {
+      try {
+        // 1. Obtener productos personalizados de la BD
+        const dbData = await getProductos();
+
+        let customProducts = [];
+        if (dbData && dbData.length > 0) {
+          // Mapeamos y asignamos un ID alto para evitar conflictos con los IDs 1-50 locales
+          customProducts = dbData.map(p => ({
+            id: p.id + 10000, // ID Offset: 1 en BD será 10001 en el juego
+            name: p.nombre,
+            price: p.precio,
+            emoji: p.emoji,
+            categoria: p.categoria || "Personalizados"
+          }));
+        }
+
+        // 2. Combinar: Stock Fijo + Personalizados
+        // De esta forma siempre hay al menos 50 productos
+        setProducts([...PRODUCTS, ...customProducts]);
+
+      } catch (error) {
+        console.error("Error conectando con API, usando solo stock local:", error);
+        setProducts(PRODUCTS);
+      } finally {
+        setLoadingProducts(false);
       }
     };
-    fetchScore();
+    loadData();
   }, []);
 
   useEffect(() => {
-    if (state.gameState === 'end' && state.score > 0) {
-       saveScore(state.score).catch(err => console.error("Error guardando score:", err));
-    }
-  }, [state.score, state.gameState]);
+    localStorage.setItem("supermercadoHighScore", state.highScore.toString());
+  }, [state.highScore]);
 
   const showMessage = useCallback((text, type) => {
     dispatch({ type: "SET_MESSAGE", payload: { text, type } });
@@ -184,66 +122,44 @@ const useSupermercado = () => {
 
   const startGame = useCallback(
     (options = {}) => {
-      const { newDifficulty, newBudgetMode, forceRestart } = options;
+      const { newDifficulty, forceRestart } = options;
       if (!forceRestart && state.gameState !== "welcome") return;
 
-      if (state.gameState === "welcome") {
-        initAudio();
-      }
+      if (state.gameState === "welcome") initAudio();
       playClickSound();
 
+      // Protección: Si por alguna razón products está vacío, recargar desde local
+      let availableProducts = [...products];
+      if (availableProducts.length === 0) {
+         availableProducts = [...PRODUCTS];
+      }
+
       const difficulty = newDifficulty || state.difficulty;
-      const isBudgetMode =
-        newBudgetMode !== null ? newBudgetMode : state.isBudgetMode;
-
       const settings = DIFFICULTY_SETTINGS[difficulty];
-      if (!settings) {
-        console.error(`Configuración no encontrada para dificultad: ${difficulty}`);
-        return;
-      }
+      const [min, max] = settings ? settings.items : [3, 5];
+      const numItems = Math.floor(Math.random() * (max - min + 1)) + min;
 
-      const [minProd, maxProd] = settings.items;
-      const numProducts = Math.floor(Math.random() * (maxProd - minProd + 1)) + minProd;
-
-      // Usamos quantityRange si existe, o un default [1, 3] por seguridad
-      const [minQty, maxQty] = settings.quantityRange || [1, 3];
-
-      let availableProducts = [...PRODUCTS];
       const newShoppingList = {};
+      const productsPool = [...availableProducts];
 
-      for (let i = 0; i < numProducts; i++) {
-        if (availableProducts.length === 0) break;
-
-        const productIndex = Math.floor(Math.random() * availableProducts.length);
-        const product = availableProducts[productIndex];
-
-        const quantity = Math.floor(Math.random() * (maxQty - minQty + 1)) + minQty;
-
+      for (let i = 0; i < numItems; i++) {
+        if (productsPool.length === 0) break;
+        const productIndex = Math.floor(Math.random() * productsPool.length);
+        const product = productsPool[productIndex];
+        const quantity = 1 + Math.floor(Math.random() * 3);
         newShoppingList[product.id] = { ...product, quantity };
-        availableProducts.splice(productIndex, 1);
-      }
-
-      let budget = 0;
-      if (isBudgetMode) {
-        const listTotal = Object.values(newShoppingList).reduce(
-          (sum, item) => sum + item.price * item.quantity,
-          0
-        );
-        const margin = (difficulty === 'hard' || difficulty === 'extreme') ? 1.1 : 1.25;
-        budget = parseFloat((listTotal * margin).toFixed(2));
+        productsPool.splice(productIndex, 1);
       }
 
       dispatch({
         type: "START_GAME",
         payload: {
           shoppingList: newShoppingList,
-          budget,
           difficulty,
-          isBudgetMode,
         },
       });
     },
-    [state.difficulty, state.isBudgetMode, state.gameState]
+    [state.difficulty, state.gameState, products]
   );
 
   const handleProductClick = useCallback(
@@ -252,53 +168,32 @@ const useSupermercado = () => {
       const isFull = !!state.cart[product.id];
 
       if (!isListed || isFull) {
-        showMessage(
-          isFull ? "¡Ya tienes suficientes!" : "No está en tu lista.",
-          "blue"
-        );
-        playSound("C3", "8n");
+        showMessage(isFull ? "¡Ya lo tienes!" : "No está en tu lista.", "blue");
+        playSound("C4", "8n");
         return;
       }
 
-      if (state.isBudgetMode) {
-        const itemCost = product.price * state.shoppingList[product.id].quantity;
-        if (itemCost > state.budgetRemaining) {
-          showMessage("¡No tienes suficiente presupuesto!", "red");
-          playErrorSound();
-          return;
-        }
-      }
-
-      const { quantity } = state.shoppingList[product.id];
-
-      const questionData = generateQuestion(product, quantity, state.difficulty);
+      const { quantity: neededQuantity, price } = state.shoppingList[product.id];
+      const itemCost = price * neededQuantity;
+      const question = `Necesitas ${neededQuantity} ${product.name}. Si cada uno cuesta $${price.toFixed(2)}, ¿cuánto es el total?`;
+      const answer = parseFloat(itemCost.toFixed(2));
 
       dispatch({
         type: "OPEN_QUESTION_MODAL",
-        payload: questionData,
+        payload: { product, question, answer, type: "multiplication" },
       });
     },
-    [
-      state.shoppingList,
-      state.cart,
-      state.isBudgetMode,
-      state.budgetRemaining,
-      state.difficulty,
-      showMessage,
-    ]
+    [state.shoppingList, state.cart, showMessage]
   );
 
   const handleAnswerSubmit = useCallback(
     (userAnswer) => {
       if (!state.currentQuestion) return;
-
-      const isCorrect = Math.abs(parseFloat(userAnswer) - state.currentQuestion.answer) < 0.05;
+      const isCorrect = Math.abs(parseFloat(userAnswer) - state.currentQuestion.answer) < 0.1;
 
       if (isCorrect) {
         playSuccessSound();
-        const streakMsg = state.streak >= 2 ? ` ¡Racha x${state.streak + 1}!` : "";
-        showMessage("¡Correcto!" + streakMsg, "green");
-
+        showMessage("¡Correcto!", "green");
         dispatch({
           type: "ANSWER_CORRECT",
           payload: { product: state.currentQuestion.product, points: 10 },
@@ -306,15 +201,13 @@ const useSupermercado = () => {
         dispatch({ type: "CLOSE_MODAL" });
       } else {
         playErrorSound();
-        showMessage("Incorrecto. La racha se reinicia.", "red");
-        dispatch({ type: "ANSWER_WRONG" });
+        showMessage("Incorrecto, intenta de nuevo.", "red");
       }
     },
-    [state.currentQuestion, state.streak, showMessage]
+    [state.currentQuestion, showMessage]
   );
 
   const handleCheckout = useCallback(() => dispatch({ type: "CHECKOUT" }), []);
-
   const handleEndGame = useCallback((points) => {
     dispatch({ type: "ADD_POINTS_AND_END", payload: { points } });
   }, []);
@@ -327,6 +220,8 @@ const useSupermercado = () => {
     handleAnswerSubmit,
     handleCheckout,
     handleEndGame,
+    products: products.length > 0 ? products : PRODUCTS,
+    loadingProducts
   };
 };
 

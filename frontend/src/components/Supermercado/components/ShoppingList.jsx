@@ -1,13 +1,7 @@
 // client/src/components/Supermercado/components/ShoppingList.jsx
 import React from "react";
 
-const ShoppingList = ({
-  list,
-  cart,
-  onRestart,
-  lifelineUsed,
-  onUseLifeline,
-}) => {
+const ShoppingList = ({ list, cart, onRestart, onShowInstructions }) => {
   const totalCost = Object.values(cart).reduce(
     (total, item) => total + item.price * item.quantity,
     0
@@ -29,11 +23,9 @@ const ShoppingList = ({
             Lista
           </h2>
           <button
-            id="lifeline-btn"
-            className="btn bg-yellow-200 text-yellow-700 p-3 text-xl"
-            title="Usar comodín"
-            onClick={onUseLifeline}
-            disabled={lifelineUsed}
+            onClick={onShowInstructions}
+            className="bg-blue-100 text-blue-600 p-2 rounded-full hover:bg-blue-200 transition"
+            title="Instrucciones"
           >
             💡
           </button>
