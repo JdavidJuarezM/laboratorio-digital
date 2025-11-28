@@ -1,12 +1,10 @@
-// javascript
-// file: `frontend/src/components/Reciclaje/hooks/useReciclaje.js`
-import { useReducer, useEffect, useCallback, useRef } from 'react';
+// frontend/src/components/Reciclaje/hooks/useReciclaje.js
+import { useReducer, useEffect, useCallback, useRef, useState } from 'react';
 import {
   trashData,
   powerUpItems,
   dangerItem,
   levels,
-  botMessages,
   INITIAL_LIVES,
   POWERUP_DURATION,
   FEVER_MODE_STREAK_TARGET,
@@ -23,7 +21,7 @@ import {
   stopBackgroundMusic
 } from '../soundService.js';
 
-import { getHighScore, saveHighScore } from '../reciclajeService.js';
+import { getHighScore, saveHighScore, getItemsReciclaje } from '../reciclajeService.js';
 
 const initialState = {
   gameState: 'welcome',
@@ -218,6 +216,10 @@ function gameReducer(state, action) {
 
 export const useReciclaje = () => {
   const [state, dispatch] = useReducer(gameReducer, initialState);
+
+  // Estado para manejar el conjunto total de ítems (predeterminados + personalizados)
+  const [allItemsPool, setAllItemsPool] = useState([...trashData]);
+
   const {
     gameState,
     score,
@@ -242,21 +244,43 @@ export const useReciclaje = () => {
   // Ref for drag-and-drop current dragging item
   const draggingItemRef = useRef(null);
 
+  // Carga inicial de datos (Score e Items)
   useEffect(() => {
     let mounted = true;
-    const loadScore = async () => {
+    const cargarDatos = async () => {
       try {
-        const data = await getHighScore();
-        if (!mounted) return;
-        dispatch({ type: 'SET_HIGH_SCORE', payload: data.highScore ?? 0 });
+        // 1. Cargar High Score
+        const scoreData = await getHighScore();
+        if (mounted) {
+          dispatch({ type: 'SET_HIGH_SCORE', payload: scoreData.highScore ?? 0 });
+        }
+
+        // 2. Cargar Items Personalizados
+        const dbItems = await getItemsReciclaje();
+
+        if (mounted && dbItems && dbItems.length > 0) {
+          // Mapear al formato que espera el juego
+          const customItemsFormatted = dbItems.map(i => ({
+            id: `custom-${i.id}`,
+            name: i.nombre,
+            type: i.tipo,
+            icon: i.icono // Usamos 'icon' para el emoji
+          }));
+
+          // Combinar con los datos estáticos
+          setAllItemsPool([...trashData, ...customItemsFormatted]);
+        }
       } catch (e) {
-        console.error("No se pudo cargar el high score", e);
+        console.error("Error inicializando datos de reciclaje:", e);
+        // Fallback localstorage solo para score
         const savedScore = localStorage.getItem('recycleHighScore') || 0;
-        if (!mounted) return;
-        dispatch({ type: 'SET_HIGH_SCORE', payload: parseInt(savedScore, 10) });
+        if (mounted) {
+          dispatch({ type: 'SET_HIGH_SCORE', payload: parseInt(savedScore, 10) });
+        }
       }
     };
-    loadScore();
+
+    cargarDatos();
     return () => { mounted = false; };
   }, []);
 
@@ -291,19 +315,23 @@ export const useReciclaje = () => {
   const spawnNewTrash = useCallback(() => {
     const chance = Math.random();
     let item;
+
+    // Usamos el pool dinámico en lugar de la constante trashData
+    const currentPool = allItemsPool.length > 0 ? allItemsPool : trashData;
+
     if (isFeverModeActive) {
-      item = chance < 0.15 ? powerUpItems[Math.floor(Math.random() * powerUpItems.length)] : trashData[Math.floor(Math.random() * trashData.length)];
+      item = chance < 0.15 ? powerUpItems[Math.floor(Math.random() * powerUpItems.length)] : currentPool[Math.floor(Math.random() * currentPool.length)];
     } else {
       if (chance < 0.10) item = powerUpItems[Math.floor(Math.random() * powerUpItems.length)];
       else if (chance < 0.20) item = dangerItem;
-      else item = trashData[Math.floor(Math.random() * trashData.length)];
+      else item = currentPool[Math.floor(Math.random() * currentPool.length)];
     }
 
     if (item?.type === 'powerup') playSound('powerup-spawn');
     if (item?.type === 'danger') playSound('bomb-spawn');
 
     dispatch({ type: 'SPAWN_ITEM', payload: item });
-  }, [isFeverModeActive]);
+  }, [isFeverModeActive, allItemsPool]);
 
   useEffect(() => {
     if (gameState === 'paused') {

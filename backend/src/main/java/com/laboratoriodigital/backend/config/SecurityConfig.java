@@ -65,6 +65,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/maestros/registro", "/api/maestros/login").permitAll()
                         .requestMatchers("/api/recursos/files/**").permitAll()
                         .requestMatchers("/api/productos/**").permitAll()
+                        .requestMatchers("/api/reciclaje/items/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

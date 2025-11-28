@@ -1,34 +1,44 @@
 // frontend/src/components/Reciclaje/reciclajeService.js
 
-import apiClient from "../../services/apiClient.js"; // Corrección: Estandarizado a apiClient.js y ruta corregida
+import apiClient from "../../services/apiClient.js";
 
-/**
- * Obtiene el high score de reciclaje del usuario autenticado.
- * @returns {Promise<object>} Un objeto, ej: { highScore: 1500 }
- */
+// --- High Scores (Existente) ---
 export const getHighScore = async () => {
   try {
-    // Hacemos un GET a /api/reciclaje/highscore. apiClient añadirá el token.
     const { data } = await apiClient.get("/reciclaje/highscore");
     return data;
   } catch (error) {
-    console.error("Error al cargar el high score de reciclaje:", error.response?.data || error.message);
-    throw error.response?.data || new Error("Error de red o en el servidor");
+    console.error("Error al cargar high score:", error);
+    throw error;
   }
 };
 
-/**
- * Guarda un nuevo high score de reciclaje para el usuario autenticado.
- * @param {number} score - El nuevo high score a guardar.
- * @returns {Promise<object>} La respuesta del servidor.
- */
 export const saveHighScore = async (score) => {
   try {
-    // Hacemos un POST a /api/reciclaje/guardar con el score.
     const { data } = await apiClient.post("/reciclaje/guardar", { score });
     return data;
   } catch (error) {
-    console.error("Error al guardar el high score de reciclaje:", error.response?.data || error.message);
-    throw error.response?.data || new Error("Error de red o en el servidor");
+    console.error("Error al guardar high score:", error);
+    throw error;
   }
+};
+
+// --- NUEVO: Gestión de Items ---
+export const getItemsReciclaje = async () => {
+  try {
+    const { data } = await apiClient.get("/reciclaje/items");
+    return data;
+  } catch (error) {
+    console.error("Error cargando items:", error);
+    return [];
+  }
+};
+
+export const crearItemReciclaje = async (item) => {
+  const { data } = await apiClient.post("/reciclaje/items", item);
+  return data;
+};
+
+export const eliminarItemReciclaje = async (id) => {
+  await apiClient.delete(`/reciclaje/items/${id}`);
 };
