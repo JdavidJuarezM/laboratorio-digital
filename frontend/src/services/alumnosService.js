@@ -2,6 +2,7 @@
 import apiClient from "./apiClient";
 
 export const getAlumnos = async () => {
+  // CORRECTO: Solo "/alumnos", NO "/api/alumnos"
   const { data } = await apiClient.get("/alumnos");
   return data;
 };

@@ -1,10 +1,14 @@
 // frontend/src/components/HuertoVirtual/hooks/useHuertoState.js
+
 import {useReducer, useEffect, useCallback, useRef} from "react";
 import useSound from "use-sound";
-import { getEstadoHuerto } from "../../../services/huertoService"; // Mantenemos para carga genérica si falla
-import { actualizarProgresoAlumno, getAlumnos } from "../../../services/alumnosService"; // NUEVO
-import {GAME_CONFIG, WEATHER_TYPES} from "../../../constants/gameConfig";
-import {bancoDePreguntas} from "../../../constants/bancoDePreguntas";
+import { getEstadoHuerto } from "../../../services/huertoService";
+import { GAME_CONFIG, WEATHER_TYPES } from "../../../constants/gameConfig";
+import { bancoDePreguntas as preguntasDefault } from "../../../constants/bancoDePreguntas";
+
+// Servicios para conectar con la BD
+import { actualizarProgresoAlumno, getAlumnos } from "../../../services/alumnosService";
+import { getPreguntas } from "../../../services/preguntasService";
 
 const initialState = {
     etapa: 0,
@@ -20,6 +24,7 @@ const initialState = {
     error: null,
     clima: WEATHER_TYPES.SUNNY.id,
     notificacionClima: "",
+    bancoPreguntas: null, // Aquí guardaremos las preguntas cargadas de la BD
 };
 
 function gameReducer(state, action) {
@@ -29,6 +34,9 @@ function gameReducer(state, action) {
 
         case "SET_LOADING_ERROR":
             return {...state, isLoading: false, error: action.payload};
+
+        case "SET_BANCO_PREGUNTAS":
+            return { ...state, bancoPreguntas: action.payload };
 
         case "GAME_TICK": {
             const currentWeather = Object.values(WEATHER_TYPES).find(w => w.id === state.clima) || WEATHER_TYPES.SUNNY;
@@ -75,24 +83,19 @@ function gameReducer(state, action) {
         case "SHOW_QUESTION": {
             if (state.preguntaActual || state.respuestasCorrectas >= 3) return state;
 
-            // Carga segura de preguntas personalizadas
-            let banco = bancoDePreguntas;
-            const savedQuestions = localStorage.getItem("huerto_preguntas");
-            if (savedQuestions) {
-                try {
-                    const parsed = JSON.parse(savedQuestions);
-                    if (parsed && typeof parsed === 'object') banco = parsed;
-                } catch (e) {
-                    console.error("Error leyendo preguntas locales", e);
-                }
-            }
+            // Usamos el banco cargado de la BD o el default si no hay
+            const banco = state.bancoPreguntas || preguntasDefault;
 
+            // Buscamos preguntas de la etapa actual que no se hayan hecho
             const preguntasDisponibles = (banco[state.etapa] || []).filter(
                 (p) => !state.preguntasHechas.includes(p.pregunta)
             );
 
             if (preguntasDisponibles.length > 0) {
-                const pregunta = preguntasDisponibles[Math.floor(Math.random() * preguntasDisponibles.length)];
+                const pregunta =
+                    preguntasDisponibles[
+                        Math.floor(Math.random() * preguntasDisponibles.length)
+                        ];
                 return {
                     ...state,
                     preguntaActual: pregunta,
@@ -103,6 +106,8 @@ function gameReducer(state, action) {
 
         case "ANSWER_QUESTION": {
             const esCorrecta = action.payload.esCorrecta;
+
+            // Si es correcta, la guardamos para no repetirla. Si falla, NO la guardamos para que vuelva a salir.
             const nuevasPreguntasHechas = esCorrecta
                 ? [...state.preguntasHechas, state.preguntaActual.pregunta]
                 : state.preguntasHechas;
@@ -111,7 +116,9 @@ function gameReducer(state, action) {
                 ...state,
                 preguntaActual: null,
                 preguntasHechas: nuevasPreguntasHechas,
-                respuestasCorrectas: state.respuestasCorrectas + (esCorrecta ? 1 : 0),
+                respuestasCorrectas:
+                    state.respuestasCorrectas + (esCorrecta ? 1 : 0),
+                // Bajamos recursos a 90 para romper el bucle infinito
                 agua: state.agua >= 100 ? 90 : state.agua,
                 sol: state.sol >= 100 ? 90 : state.sol,
             };
@@ -134,7 +141,7 @@ function gameReducer(state, action) {
             return {...state, etapaCelebracion: null};
 
         case "RESTART":
-            return {...initialState, isLoading: false, pasoTutorial: 0};
+            return {...initialState, isLoading: false, pasoTutorial: 0, bancoPreguntas: state.bancoPreguntas};
 
         case "SET_TUTORIAL_STEP":
             return {...state, pasoTutorial: action.payload};
@@ -154,40 +161,44 @@ export const useHuertoState = (juegoIniciado) => {
     const shakeDataRef = useRef({history: [], lastApplied: 0, lastX: 0, lastY: 0});
     const isCurrentlySaving = useRef(false);
 
-    // 1. CARGA INICIAL: Recuperar progreso del alumno desde BD
+    // 1. CARGA INICIAL: Recuperar progreso del alumno desde BD y Preguntas
     useEffect(() => {
         if (juegoIniciado) {
-            const studentId = sessionStorage.getItem("current_student_id");
+            const cargarDatos = async () => {
+                try {
+                    // A. Cargar preguntas de la BD
+                    const preguntasBD = await getPreguntas();
+                    if (preguntasBD) {
+                        dispatch({ type: "SET_BANCO_PREGUNTAS", payload: preguntasBD });
+                    }
 
-            if (studentId) {
-                // Si hay un alumno seleccionado, buscamos su estado en la lista
-                // (Como no tenemos un endpoint 'getById' específico en el frontend service,
-                // reusamos getAlumnos para filtrar. Es eficiente para clases pequeñas).
-                getAlumnos()
-                    .then(alumnos => {
-                        const alumno = alumnos.find(a => a.id.toString() === studentId);
+                    // B. Cargar progreso del alumno
+                    const studentId = sessionStorage.getItem("current_student_id");
+                    if (studentId) {
+                        const listaAlumnos = await getAlumnos();
+                        const alumno = listaAlumnos.find(a => a.id.toString() === studentId);
+
                         if (alumno) {
                             dispatch({type: "SET_INITIAL_STATE", payload: {
                                 etapa: alumno.etapa,
                                 respuestasCorrectas: alumno.aciertos,
-                                // Reseteamos recursos al iniciar sesión para evitar trampas o estados raros
                                 agua: GAME_CONFIG.INITIAL_RESOURCE_LEVEL,
                                 sol: GAME_CONFIG.INITIAL_RESOURCE_LEVEL,
                                 clima: initialState.clima
                             }});
                         } else {
-                            // Si no se encuentra (raro), iniciamos de cero
                             dispatch({type: "SET_INITIAL_STATE", payload: {...initialState, isLoading: false}});
                         }
-                    })
-                    .catch(err => {
-                        console.error("Error recuperando progreso:", err);
-                        dispatch({type: "SET_LOADING_ERROR", payload: "Error de conexión."});
-                    });
-            } else {
-                // Modo sin alumno (si aplicara) o error
-                dispatch({type: "SET_INITIAL_STATE", payload: {...initialState, isLoading: false}});
-            }
+                    } else {
+                        // Jugar sin alumno (modo prueba)
+                        dispatch({type: "SET_INITIAL_STATE", payload: {...initialState, isLoading: false}});
+                    }
+                } catch (err) {
+                    console.error("Error inicializando huerto:", err);
+                    dispatch({type: "SET_LOADING_ERROR", payload: "Error de conexión."});
+                }
+            };
+            cargarDatos();
         }
     }, [juegoIniciado]);
 
@@ -245,7 +256,7 @@ export const useHuertoState = (juegoIniciado) => {
         }
     }, [juegoIniciado, estado.isLoading]);
 
-    // 5. Crecimiento
+    // 5. Lógica de Crecimiento
     useEffect(() => {
         if (juegoIniciado && !estado.isLoading) {
             const {etapa, agua, sol, respuestasCorrectas, preguntaActual} = estado;
@@ -265,9 +276,10 @@ export const useHuertoState = (juegoIniciado) => {
 
     const acciones = {
         soltarHerramienta: useCallback(() => {
-            shakeDataRef.current.history = [];
-            shakeDataRef.current.lastX = 0;
-            shakeDataRef.current.lastY = 0;
+            const ref = shakeDataRef.current;
+            ref.history = [];
+            ref.lastX = 0;
+            ref.lastY = 0;
         }, []),
 
         agitarHerramienta: useCallback((resourceId, delta) => {
@@ -277,6 +289,7 @@ export const useHuertoState = (juegoIniciado) => {
             const shakeConfig = GAME_CONFIG.SHAKE_DETECTION;
             const ref = shakeDataRef.current;
 
+            // 1. Velocidad horizontal instantánea
             const moveX = delta.x - ref.lastX;
             ref.lastX = delta.x;
             ref.lastY = delta.y;
@@ -286,21 +299,27 @@ export const useHuertoState = (juegoIniciado) => {
             }
 
             const speedX = Math.abs(moveX);
+
+            // 2. Registrar solo velocidad horizontal significativa
             if (speedX > shakeConfig.DISTANCE_PX) {
                 const direction = Math.sign(moveX);
                 ref.history.push({timestamp: now, speed: speedX, direction});
             }
 
+            // 3. VALIDACIÓN ESTRICTA: Ida y vuelta
             const hasLeft = ref.history.some(item => item.direction < 0);
             const hasRight = ref.history.some(item => item.direction > 0);
+            const isShakeValid = hasLeft && hasRight;
 
             if (
                 ref.history.length >= shakeConfig.COUNT &&
-                hasLeft && hasRight &&
+                isShakeValid &&
                 now - ref.lastApplied > shakeConfig.TIME_MS
             ) {
                 const totalSpeed = ref.history.reduce((sum, item) => sum + item.speed, 0);
                 const averageSpeed = totalSpeed / ref.history.length;
+
+                // 4. Puntos lentos (1 a 5)
                 const cantidadDinamica = Math.min(Math.max(Math.floor(averageSpeed * 0.15), 1), 5);
 
                 ref.lastApplied = now;
