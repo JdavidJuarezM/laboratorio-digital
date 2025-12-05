@@ -2,33 +2,35 @@
 
 /* Animaciones de entrada y salida */
 .animate-slide-in-left {
-  animation: slideInLeft 1s ease-out forwards;
-  opacity: 0;
+    animation: slideInLeft 1s ease-out forwards;
+    opacity: 0;
 }
+
 .animate-slide-in-right {
-  animation: slideInRight 1s ease-out forwards;
-  opacity: 0;
+    animation: slideInRight 1s ease-out forwards;
+    opacity: 0;
 }
 
 @keyframes slideInLeft {
-  from {
-    opacity: 0;
-    transform: translateX(-50px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
+    from {
+        opacity: 0;
+        transform: translateX(-50px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
 }
+
 @keyframes slideInRight {
-  from {
-    opacity: 0;
-    transform: translateX(50px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
+    from {
+        opacity: 0;
+        transform: translateX(50px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
 }
 
 /* Animación del logo */
@@ -36,138 +38,150 @@
 #logo-accent,
 #logo-tag,
 #logo-line {
-  animation: float-parts 4s ease-in-out infinite;
+    animation: float-parts 4s ease-in-out infinite;
 }
+
 #logo-accent {
-  animation-delay: 0.2s;
+    animation-delay: 0.2s;
 }
+
 #logo-tag {
-  animation-delay: 0.4s;
+    animation-delay: 0.4s;
 }
+
 #logo-line {
-  animation-delay: 0.4s;
+    animation-delay: 0.4s;
 }
 
 @keyframes float-parts {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-10px);
-  }
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-10px);
+    }
 }
 
 #logo-tag circle {
-  animation: blink 5s infinite;
+    animation: blink 5s infinite;
 }
+
 @keyframes blink {
-  0%,
-  48%,
-  52%,
-  100% {
-    fill-opacity: 1;
-  }
-  50% {
-    fill-opacity: 0.2;
-  }
+    0%,
+    48%,
+    52%,
+    100% {
+        fill-opacity: 1;
+    }
+    50% {
+        fill-opacity: 0.2;
+    }
 }
 
 /* Estilo para el campo de formulario */
 .form-group:focus-within label,
 .form-group input:not(:placeholder-shown) + label {
-  transform: translateY(-1.1rem) scale(0.8);
-  color: #f97316;
+    transform: translateY(-1.1rem) scale(0.8);
+    color: #f97316;
 }
+
 .form-group label {
-  transition: all 0.2s ease-in-out;
+    transition: all 0.2s ease-in-out;
 }
 
 /* Botón de Login */
 .login-button {
-  background: linear-gradient(45deg, #f97316, #fbbf24);
-  position: relative;
-  overflow: hidden;
+    background: linear-gradient(45deg, #f97316, #fbbf24);
+    position: relative;
+    overflow: hidden;
 }
+
 .login-button::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 255, 255, 0.4),
-    transparent
-  );
-  animation: shine 4s infinite;
-}
-@keyframes shine {
-  0% {
+    content: "";
+    position: absolute;
+    top: 0;
     left: -100%;
-  }
-  50%,
-  100% {
-    left: 100%;
-  }
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+            90deg,
+            transparent,
+            rgba(255, 255, 255, 0.4),
+            transparent
+    );
+    animation: shine 4s infinite;
+}
+
+@keyframes shine {
+    0% {
+        left: -100%;
+    }
+    50%,
+    100% {
+        left: 100%;
+    }
 }
 
 /* Estado de carga del botón */
 .login-button.loading .button-text {
-  display: none;
+    display: none;
 }
+
 .login-button.loading .spinner {
-  display: inline-block;
+    display: inline-block;
 }
+
 .spinner {
-  display: none;
-  border: 3px solid rgba(255, 255, 255, 0.3);
-  border-radius: 50%;
-  border-top-color: #fff;
-  width: 24px;
-  height: 24px;
-  animation: spin 1s ease-in-out infinite;
+    display: none;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: #fff;
+    width: 24px;
+    height: 24px;
+    animation: spin 1s ease-in-out infinite;
 }
+
 @keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 /* Animación de error */
 .shake {
-  animation: shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+    animation: shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
 }
+
 @keyframes shake {
-  10%,
-  90% {
-    transform: translate3d(-1px, 0, 0);
-  }
-  20%,
-  80% {
-    transform: translate3d(2px, 0, 0);
-  }
-  30%,
-  50%,
-  70% {
-    transform: translate3d(-4px, 0, 0);
-  }
-  40%,
-  60% {
-    transform: translate3d(4px, 0, 0);
-  }
+    10%,
+    90% {
+        transform: translate3d(-1px, 0, 0);
+    }
+    20%,
+    80% {
+        transform: translate3d(2px, 0, 0);
+    }
+    30%,
+    50%,
+    70% {
+        transform: translate3d(-4px, 0, 0);
+    }
+    40%,
+    60% {
+        transform: translate3d(4px, 0, 0);
+    }
 }
 
 /* Animación de éxito */
 .success-checkmark {
-  stroke-dasharray: 100;
-  stroke-dashoffset: 100;
-  animation: draw 0.7s ease-out forwards;
+    stroke-dasharray: 100;
+    stroke-dashoffset: 100;
+    animation: draw 0.7s ease-out forwards;
 }
+
 @keyframes draw {
-  to {
-    stroke-dashoffset: 0;
-  }
+    to {
+        stroke-dashoffset: 0;
+    }
 }

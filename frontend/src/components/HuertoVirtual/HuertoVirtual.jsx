@@ -192,13 +192,6 @@ function HuertoVirtual() {
                         </div>
                     </div>
                 </main>
-
-                {/* --- ESTANTE DE HERRAMIENTAS --- */}
-                {/* MODIFICADO:
-            - order-2 en móvil (abajo), order-1 en escritorio (izquierda).
-            - Ancho completo en móvil, 1/5 en escritorio.
-            - Fila (row) en móvil, Columna (col) en escritorio.
-        */}
                 <aside
                     className="w-full md:w-1/5 flex flex-row md:flex-col items-center justify-center gap-4 md:gap-6 relative z-30 order-2 md:order-1 mt-0 md:mt-4 p-2 md:p-0 bg-transparent">
                     {/* Fondo del tablón adaptable */}

@@ -10,7 +10,7 @@ import {
     RocketIcon,
     LogoutIcon,
     VocabularioIcon,
-    ReciclajeIcon, // <-- 1. IMPORTAR EL NUEVO ICONO
+    ReciclajeIcon,
 } from "./Icons";
 
 const DashboardWelcome = () => {
@@ -35,19 +35,18 @@ const DashboardWelcome = () => {
                     icon={
                         <HuertoIcon className="w-16 h-16 text-5xl flex items-center justify-center"/>
                     }
-                    title="Mi Huerto Virtual"
-                    description="Planta, cuida y aprende sobre el crecimiento de las verduras."
+                    title="Mi Invernadero Virtual"
+                    description="Aprende sobre el crecimiento de las plantas mientras cuidas tu propio huerto virtual."
                     buttonColor="bg-green-500 hover:bg-green-600"
                     linkTo="/dashboard/huerto"
                 />
 
-                {/* Nueva tarjeta para el juego de vocabulario */}
                 <GameCard
                     icon={
                         <VocabularioIcon className="w-16 h-16 text-5xl flex items-center justify-center"/>
                     }
                     title="Juego de Vocabulario"
-                    description="Aprende nuevas palabras de forma divertida."
+                    description="Ordena las letras y aprende nuevas palabras de manera divertida."
                     buttonColor="bg-blue-500 hover:bg-blue-600"
                     linkTo="/dashboard/vocabulario"
                 />
@@ -56,19 +55,19 @@ const DashboardWelcome = () => {
                     icon={
                         <SupermercadoIcon className="w-16 h-16 text-5xl flex items-center justify-center"/>
                     }
-                    title="Supermercado"
-                    description="Resuelve problemas de sumas y restas mientras haces la compra."
+                    title="Super Mercado"
+                    description="Resuelve problemas matematicos para añadir los productos a tu carrito y completar la lista del super."
                     buttonColor="bg-yellow-500 hover:bg-yellow-600"
                     linkTo="/dashboard/supermercado"
                 />
 
-                {/* <-- 2. AÑADIR LA NUEVA TARJETA DE JUEGO --> */}
+
                 <GameCard
                     icon={
                         <ReciclajeIcon className="w-16 h-16 text-5xl flex items-center justify-center"/>
                     }
                     title="Misión Reciclaje"
-                    description="Clasifica la basura en los contenedores correctos y salva el planeta."
+                    description="Clasifica la basura en los contenedores y aprende a reciclar correctamente."
                     buttonColor="bg-green-500 hover:bg-green-600"
                     linkTo="/dashboard/reciclaje"
                 />
@@ -77,10 +76,10 @@ const DashboardWelcome = () => {
                     icon={
                         <ResourcesIcon className="w-16 h-16 text-5xl flex items-center justify-center"/>
                     }
-                    title="Recursos Digitales"
-                    description="Biblioteca de videos, guías y documentos compartidos por tus maestros."
+                    title="Baúl Mágico"
+                    description="Encuentra el secreto para ser el mejor de la clase repasando el material compartido por tus maestros."
                     buttonColor="bg-purple-500 hover:bg-purple-600"
-                    linkTo="/dashboard/recursos" // Cambiamos la ruta
+                    linkTo="/dashboard/recursos"
                 />
             </main>
 

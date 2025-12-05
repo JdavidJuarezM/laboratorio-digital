@@ -4,8 +4,7 @@ import React, {memo, useMemo} from "react";
 import {motion, AnimatePresence} from "framer-motion";
 import PropTypes from "prop-types";
 
-// --- CONFIGURACIÓN BASE ---
-// Usamos colores más vivos y degradados en las clases
+
 const configEtapas = {
     0: {stemH: 0, flower: false, colorClass: "from-green-400 to-green-600"},
     1: {stemH: 60, flower: false, colorClass: "from-green-400 to-green-600"},

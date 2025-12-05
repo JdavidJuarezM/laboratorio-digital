@@ -5,7 +5,7 @@ import useSound from "use-sound";
 import {getEstadoHuerto} from "../../../services/huertoService";
 import {GAME_CONFIG, WEATHER_TYPES} from "../../../constants/gameConfig";
 import {bancoDePreguntas as preguntasDefault} from "../../../constants/bancoDePreguntas";
-import { bancoDePreguntas } from "../../../constants/bancoDePreguntas";
+import {bancoDePreguntas} from "../../../constants/bancoDePreguntas";
 // Servicios para conectar con la BD
 import {actualizarProgresoAlumno, getAlumnos} from "../../../services/alumnosService";
 import {getPreguntas} from "../../../services/preguntasService";

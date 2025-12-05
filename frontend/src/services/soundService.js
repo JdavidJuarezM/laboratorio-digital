@@ -2,81 +2,81 @@ import * as Tone from "tone";
 
 // Sintetizadores existentes
 const clickSynth = new Tone.Synth({
-  oscillator: { type: "triangle" },
-  envelope: { attack: 0.01, decay: 0.2, sustain: 0.1, release: 0.2 },
+    oscillator: {type: "triangle"},
+    envelope: {attack: 0.01, decay: 0.2, sustain: 0.1, release: 0.2},
 }).toDestination();
 const hoverSynth = new Tone.Synth({
-  oscillator: { type: "sine" },
-  envelope: { attack: 0.01, decay: 0.1, sustain: 0.1, release: 0.1 },
+    oscillator: {type: "sine"},
+    envelope: {attack: 0.01, decay: 0.1, sustain: 0.1, release: 0.1},
 }).toDestination();
 
 // --- 👇 NUEVOS SINTETIZADORES AÑADIDOS 👇 ---
 const successSynth = new Tone.Synth({
-  oscillator: { type: "sine" },
-  envelope: { attack: 0.01, decay: 0.4, sustain: 0, release: 0.4 },
+    oscillator: {type: "sine"},
+    envelope: {attack: 0.01, decay: 0.4, sustain: 0, release: 0.4},
 }).toDestination();
 const errorSynth = new Tone.FMSynth({
-  harmonicity: 3,
-  modulationIndex: 10,
-  detune: 0,
-  oscillator: { type: "sine" },
-  envelope: { attack: 0.01, decay: 0.2, sustain: 0.1, release: 0.5 },
-  modulation: { type: "square" },
-  modulationEnvelope: { attack: 0.01, decay: 0.5, sustain: 0, release: 0.5 },
+    harmonicity: 3,
+    modulationIndex: 10,
+    detune: 0,
+    oscillator: {type: "sine"},
+    envelope: {attack: 0.01, decay: 0.2, sustain: 0.1, release: 0.5},
+    modulation: {type: "square"},
+    modulationEnvelope: {attack: 0.01, decay: 0.5, sustain: 0, release: 0.5},
 }).toDestination();
 
 let isAudioReady = false;
 
 const initializeAudio = async () => {
-  if (!isAudioReady) {
-    await Tone.start();
-    isAudioReady = true;
-    console.log("Audio context started successfully!");
-  }
+    if (!isAudioReady) {
+        await Tone.start();
+        isAudioReady = true;
+        console.log("Audio context started successfully!");
+    }
 };
 
 const soundService = {
-  start: initializeAudio,
+    start: initializeAudio,
 
-  playClick: () => {
-    if (!isAudioReady) return;
-    clickSynth.triggerAttackRelease("C5", "8n");
-  },
+    playClick: () => {
+        if (!isAudioReady) return;
+        clickSynth.triggerAttackRelease("C5", "8n");
+    },
 
-  playHover: () => {
-    if (!isAudioReady) return;
-    hoverSynth.triggerAttackRelease("A5", "16n");
-  },
+    playHover: () => {
+        if (!isAudioReady) return;
+        hoverSynth.triggerAttackRelease("A5", "16n");
+    },
 
-  // --- 👇 NUEVAS FUNCIONES AÑADIDAS 👇 ---
-  playSuccess: () => {
-    if (!isAudioReady) return;
-    successSynth.triggerAttackRelease("C6", "8n", Tone.now());
-  },
+    // --- 👇 NUEVAS FUNCIONES AÑADIDAS 👇 ---
+    playSuccess: () => {
+        if (!isAudioReady) return;
+        successSynth.triggerAttackRelease("C6", "8n", Tone.now());
+    },
 
-  playError: () => {
-    if (!isAudioReady) return;
-    errorSynth.triggerAttackRelease("C3", "8n");
-  },
+    playError: () => {
+        if (!isAudioReady) return;
+        errorSynth.triggerAttackRelease("C3", "8n");
+    },
 };
 
 const synth = new Tone.MembraneSynth().toDestination();
 
 export function levelUp() {
-  // use a slight offset to guarantee strictly increasing start times
-  const now = Tone.now();
-  const startTime = now + 0.001;
-  try {
-    synth.triggerAttackRelease('C3', '8n', startTime);
-  } catch (e) {
-    console.error('play error', e);
-  }
+    // use a slight offset to guarantee strictly increasing start times
+    const now = Tone.now();
+    const startTime = now + 0.001;
+    try {
+        synth.triggerAttackRelease('C3', '8n', startTime);
+    } catch (e) {
+        console.error('play error', e);
+    }
 }
 
 // or when calling trigger from playSound:
 export function playSound(note, duration = '8n') {
-  const start = Tone.now() + 0.001;
-  synth.triggerAttackRelease(note, duration, start);
+    const start = Tone.now() + 0.001;
+    synth.triggerAttackRelease(note, duration, start);
 }
 
 
