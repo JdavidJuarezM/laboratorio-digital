@@ -79,8 +79,9 @@ public class SecurityConfig {
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(Arrays.asList(
-                "http://localhost:5173", // <-- El puerto de tu frontend
-                "http://localhost:5174", // (Puedes dejar este por si acaso)
+                "http://localhost:5173", // Para desarrollo local
+                "https://labdigitalzapata.site",       // <--- Tu nuevo dominio
+                "https://www.labdigitalzapata.site",
                 "https://laboratorio-digital.vercel.app"
         ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
