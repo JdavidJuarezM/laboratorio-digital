@@ -22,6 +22,8 @@ export const AuthProvider = ({children}) => {
         const validarToken = async () => {
             const token = localStorage.getItem("token");
             if (token) {
+                apiClient.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+
                 try {
                     const userData = await getProfileService();
                     setUser(userData);
